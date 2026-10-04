@@ -7,12 +7,14 @@ description: >-
   不适用于：只要文案不要发布、只要图片不要发布、无人值守或批量发布、
   发布到用户自己账号以外的位置（品牌号代运营、投流、多账号矩阵）。
 metadata:
-  short-description: 生成并发布小红书图文笔记（含发布前确认闸门）
+  short-description: 生成并发布小红书图文笔记（发布前确认闸门，可被 rednote-assistant 授权替代）
 ---
 
 # 小红书图文笔记
 
 一条流水线：**文案 → 卡片图 → 实测 → 用户确认 → 发布 → 发布后核验**。
+其中「用户确认」这一步，在 `rednote-assistant` 已获得发布授权（`publish_policy: "auto"`
+且它的就绪检查全绿）时由该检查代替。
 
 下面命令里的 `<skill>` 指本文件所在目录
 （通常是 `${CODEX_HOME:-$HOME/.codex}/skills/rednote-post`）。
@@ -22,6 +24,9 @@ metadata:
 
 1. **发布前必须拿到明确同意。** 把标题、**完整正文**、**每一张图**、合集、可见范围一次性摆给
    用户看，然后**停下等待**。用户没点头不许点发布；用户改了任何一项，重新摆一遍再问。
+   **唯一的例外**：调用方是 `rednote-assistant`，且它的 `plan.py ready` 已全绿
+   （`plan.json` 里 `publish_policy: "auto"`）——那条授权等同于用户的同意，不必再重复确认。
+   例外只覆盖"发不发、发在哪一档"；改标题、正文、图片本身仍然要问。
 2. **发布是公开且难以撤回的动作。** 不替用户决定发什么、不自动补发、不批量发。
    账号／合集／可见范围以用户**当次**的指示为准，不沿用上一次。
 3. **图片必须实测。** 渲染完看一眼不算数——用 `<skill>/scripts/render_cards.py` 量字号下限、溢出、
@@ -79,6 +84,9 @@ python3 <skill>/scripts/render_cards.py <post-dir>
 
 问一句明确的"确认发布吗"。**这一步不许跳过，也不许合并进上一步。**
 
+例外见铁律 1：由 `rednote-assistant` 调用、且它的发布就绪检查全绿时，这一步视为已通过。
+自己直接接到用户请求时，没有这个例外。
+
 ### 6. 填表并回读核验
 
 ```bash
@@ -99,6 +107,16 @@ python3 <skill>/scripts/xhs.py verify --dir <post-dir> --collection "<合集名>
 python3 <skill>/scripts/xhs.py tags --dir <post-dir>
 ```
 
+要**原创声明**或**定时发布**，在 `fill` 之后、`publish` 之前补这两步（都幂等，可重跑）：
+
+```bash
+python3 <skill>/scripts/xhs.py original                      # 打开原创声明，并过「原创声明须知」弹窗
+python3 <skill>/scripts/xhs.py schedule "2026-10-06 22:00"   # 打开定时发布并写入时间
+```
+
+两个开关都是自定义组件，脚本自己做了真点击与回读；`schedule` 会校验时间晚于当前时间
+30 分钟以上。定时发布打开后，发布按钮的文字会变成「定时发布」。
+
 ### 7. 发布
 
 ```bash
@@ -106,13 +124,16 @@ python3 <skill>/scripts/xhs.py publish
 ```
 
 点完按钮 CLI 可能报"未捕获到发布反馈"，这是**正常的模糊结果**，不代表失败。以页面状态为准：
-URL 出现 `published=true` 且表单被清空 = 已提交。
+URL 出现 `published=true`（定时发布则是 `/publish/success`）且表单被清空 = 已提交。
 
 ### 8. 发布后核验
 
 ```bash
 python3 <skill>/scripts/xhs.py check-published "<标题>"
 ```
+
+定时发布的笔记**不在「已发布」页签里**——时间没到之前它出现在「全部」，带「定时发布」标记。
+要连时间一起核验，用 `rednote-assistant` 的 `xhs_state.py queue` 扫定时队列。
 
 到 `creator.xiaohongshu.com/new/note-manager` 确认：出现在**已发布**、不在**审核中**。
 把结论告诉用户（已发布／审核中／未找到），不要只报"发布完成"。

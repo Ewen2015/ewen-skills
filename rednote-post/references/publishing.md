@@ -77,6 +77,9 @@ nohup .venv/bin/python scripts/bridge_server.py > /tmp/xhs-bridge.log 2>&1 &
 | 图片预览 | `.img-preview-area .pr` |
 | 发布按钮 | `.publish-page-publish-btn button.bg-red` |
 | 合集按钮 | `.collection-plugin-button` → 选项 `.item-label` |
+| 定时发布开关 | 标签文字「定时发布」→ `.custom-switch-wrapper` → `.d-switch-simulator` |
+| 定时时间输入 | `input.d-text` 且祖先含 `[class*=datepicker]` |
+| 原创声明开关 | 标签文字「原创声明」→ `.custom-switch-wrapper`（在「作品声明」区，不在「更多设置」） |
 | 笔记管理 | `creator.xiaohongshu.com/new/note-manager` |
 
 ### 正文编辑器已经换了
@@ -119,6 +122,11 @@ document.querySelector('[role=textbox]').innerText.length
 | 合成 `pointerdown/mousedown/…/click` 序列 | ✗ 同上 |
 | **CDP `Input.dispatchMouseEvent`（真点击）** | ✓ 变成 `.tiptap-topic` 话题 |
 
+**匹配要用严格前缀，点击要按坐标。** 联想项文本形如 `#读书笔记17亿浏览`，用
+`textContent.includes('创作')` 会把「创作」选成「创作者体验挽回」——必须要求名字在下一个
+汉字/字母之前就结束。另外下**拉列表会在探测与点击之间重排**，按 index 点会点到别的项，
+要按探测到的坐标点。
+
 上游 CLI 的 `_input_single_tag` 用的是第一种，所以它 **log 说"点击标签联想"其实没生效**。
 症状很有迷惑性：所有标签被当成一整串文字，**只有最后一个**因为后面紧跟换行才被识别成话题。
 
@@ -155,6 +163,23 @@ CDP 真点击也确实发出去了，但**点了不生效**——话题数不变
 
 **这时不要发布。** 先 `xhs.py reset` 重新导航（必要时重启 Chrome 或换个时间再试），
 再走一遍 `fill`。哪怕真上不去，`verify` 也会用话题数把问题挡在发布前。
+
+### 「更多设置」的三个坑（2026-10 实测）
+
+**1. 开关要用真点击，标签是唯一稳定锚点。** 「定时发布」「原创声明」都是
+`.custom-switch-wrapper` > `.d-switch-simulator`，对它的 `el.click()` 不生效，得用
+CDP 真点击打中心点。外层 class 名是哈希（实测见过 `custom-date-picker-44`），
+只有标签文字稳定。
+
+**2. 不要用 `.post-time-wrapper input` 找时间输入框。** 那里面**第一个** input 是开关自己的
+`<input type="checkbox">`。点到它等于把定时发布又关掉，症状是"时间设上了但开关是关的"。
+要用 `input.d-text` 且祖先含 `[class*=datepicker]` 的那个。
+
+**3. 原创声明的两处时序。**
+一是「原创声明须知」弹窗里，勾选 `input[type=checkbox]` 后按钮要等一拍才解禁，
+同一帧里读会读到 `disabled` 而误判失败；二是弹窗关闭后，全屏的 `.d-modal-mask` 还会在
+DOM 里停留一会儿，期间**所有鼠标点击都被它吃掉**——这时去点定时发布开关会毫无反应。
+两个都要显式等：等按钮解禁、等 mask 消失。
 
 ## 回读核验（必做）
 

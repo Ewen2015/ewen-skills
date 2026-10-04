@@ -30,6 +30,7 @@ import subprocess
 import sys
 import tempfile
 import time
+from datetime import datetime, timedelta
 from pathlib import Path
 
 SKILLS_DIR = Path(os.environ.get("XHS_SKILLS_DIR", "/tmp/xhs-skills-repo"))
@@ -63,14 +64,21 @@ TAG_FIND_JS = """(() => {
   const items = [...box.querySelectorAll('.item')];
   for (let i = 0; i < items.length; i++) {
     const el = items[i];
-    if (!el.textContent.includes(q)) continue;
+    // 下拉项形如 `#读书笔记1.2亿浏览`：话题名后面紧跟浏览数。用 includes
+    // 会把「创作」选成「创作者体验挽回」——必须要求名字在下一个汉字/字母
+    // 之前就结束，选不到就宁可不选（verify 会拦住话题数不符）。
+    const t = (el.textContent || '').trim();
+    const at = t.indexOf('#' + q);
+    if (at < 0) continue;
+    const rest = t.slice(at + 1 + q.length);
+    if (rest && /[\u4e00-\u9fa5A-Za-z]/.test(rest[0])) continue;
     const r = el.getBoundingClientRect();
     if (r.width <= 0 || r.height <= 0) continue;
     const x = r.left + r.width / 2, y = r.top + r.height / 2;
     if (x < 0 || y < 0 || x > innerWidth || y > innerHeight) continue;
     const hit = document.elementFromPoint(x, y);
     if (!hit || !(hit === el || el.contains(hit) || hit.contains(el))) continue;
-    return JSON.stringify({index: i, text: (el.textContent || '').trim()});
+    return JSON.stringify({index: i, text: t, x: x, y: y});
   }
   return null;
 })()"""
@@ -227,6 +235,14 @@ def topic_count(page) -> int:
     return int(got) if got else 0
 
 
+def chip_texts(page) -> list[str]:
+    """The committed topic chips, e.g. ['#读书笔记[话题]#', ...]."""
+    got = page.evaluate("JSON.stringify([...document.querySelectorAll("
+                        "\"[role='textbox'] .tiptap-topic\")]"
+                        ".map(e => (e.innerText || '').trim()))")
+    return json.loads(got) if got else []
+
+
 def commit_tag(page, tag: str, timeout: float = 4.0) -> bool:
     """Turn the in-progress `#tag` into a real topic chip.
 
@@ -247,20 +263,25 @@ def commit_tag(page, tag: str, timeout: float = 4.0) -> bool:
             time.sleep(0.25)
             continue
         tries += 1
-        before = topic_count(page)
+        item = json.loads(found)
         try:
-            page._call("click_nth_element",
-                       {"selector": TOPIC_ITEM_SEL, "index": json.loads(found)["index"]})
+            # Click by the hit-tested coordinates, not by list index: the list
+            # re-renders between the probe and the click, so `click_nth_element`
+            # has been seen committing a *different* topic than the one matched
+            # (「创作」came out as「创作者体验挽回」).
+            page.mouse_click(item["x"], item["y"])
         except Exception as exc:
             if debug:
                 print(f"    [{tag}] 点击异常 {exc}", file=sys.stderr)
             time.sleep(0.3)
             continue
-        time.sleep(0.7)
-        if topic_count(page) > before:
+        time.sleep(0.8)
+        want = f"#{tag}[话题]#"
+        if want in chip_texts(page):
             return True
         if debug:
-            print(f"    [{tag}] 点了但没生效（第 {tries} 次）", file=sys.stderr)
+            print(f"    [{tag}] 点了但没生效（第 {tries} 次，页面 "
+                  f"{chip_texts(page)[-2:]}）", file=sys.stderr)
         time.sleep(0.3)
     return False
 
@@ -499,6 +520,180 @@ def cmd_collection(args) -> int:
     return 0
 
 
+# ------------------------------------------------------------------ 更多设置
+#
+# 「定时发布」「原创声明」都是自定义开关组件：对 .d-switch-simulator 调
+# el.click() 不生效，要用 CDP 真点击打中心点。稳定锚点只有标签文字本身——
+# 外层 class 名是每次构建都会变的哈希（实测见过 .custom-date-picker-44）。
+
+SWITCH_PROBE_JS = """(() => {
+  const name = %s;
+  const lbl = [...document.querySelectorAll('span,div')].find(
+    el => (el.innerText || '').trim() === name && el.children.length === 0);
+  if (!lbl) return JSON.stringify({err: 'no-label'});
+  const wrap = lbl.closest('.custom-switch-wrapper')
+            || lbl.parentElement.parentElement;
+  const sw = wrap.querySelector('.d-switch-simulator') || wrap.querySelector('.d-switch');
+  if (!sw) return JSON.stringify({err: 'no-switch'});
+  sw.scrollIntoView({block: 'center'});
+  const r = sw.getBoundingClientRect();
+  const cls = String(sw.className || '');
+  return JSON.stringify({
+    on: cls.split(/\\s+/).includes('checked') && !cls.includes('unchecked'),
+    x: r.left + r.width / 2, y: r.top + r.height / 2
+  });
+})()"""
+
+
+def switch_state(page, label: str) -> dict:
+    return json.loads(page.evaluate(SWITCH_PROBE_JS % json.dumps(label)))
+
+
+def wait_no_mask(page, timeout: float = 45.0) -> None:
+    """Wait out any modal mask.
+
+    The 原创声明须知 modal parks a full-viewport `.d-modal-mask` over the page
+    for a while after it closes, and that mask swallows every click aimed at
+    the form behind it — clicking 定时发布 while one is up silently does
+    nothing.
+
+    Measured 2026-10: the mask stays in the DOM with `display:block` and
+    `opacity:0` for ~18s after the 原创声明 dialog is confirmed. An earlier
+    10s budget expired first, the click was swallowed, and 定时发布 looked
+    like a broken switch. So: wait generously, and if it is still there,
+    stop instead of clicking into a dead overlay.
+    """
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        if not page.evaluate("!!document.querySelector('.d-modal-mask')"):
+            return
+        time.sleep(0.4)
+    die(f"弹窗遮罩 .d-modal-mask 超过 {timeout:.0f}s 仍未消失，"
+        "此时点击会被吞掉。请稍后重跑这条命令。")
+
+
+def set_switch(page, label: str, want: bool = True) -> bool:
+    """Flip a 更多设置 switch, verifying by re-reading rather than trusting the click."""
+    wait_no_mask(page)
+    info = switch_state(page, label)
+    if info.get("err"):
+        die(f"找不到「{label}」开关：{info['err']}（页面可能改版）")
+    if bool(info.get("on")) != want:
+        page.mouse_click(info["x"], info["y"])
+        time.sleep(2)
+        info = switch_state(page, label)
+    on = bool(info.get("on"))
+    if on != want:
+        die(f"「{label}」开关没能切到{'开' if want else '关'}")
+    return on
+
+
+def cmd_original(_args) -> int:
+    """打开原创声明，并处理「原创声明须知」弹窗。"""
+    page, _ = bridge()
+    set_switch(page, "原创声明", True)
+    time.sleep(0.8)
+    # 勾选框是自定义组件：input.click() 能改 checked，但 Vue 要等一拍才把
+    # 「声明原创」按钮解禁——同一帧里读按钮会读到 disabled，误判成失败。
+    step = "no-dialog"
+    for _ in range(5):
+        step = page.evaluate("""(() => {
+          const footers = [...document.querySelectorAll('div.footer')];
+          const f = footers.find(x => (x.innerText || '').includes('原创声明须知'));
+          if (!f) return 'no-dialog';
+          const cb = f.querySelector('div.d-checkbox input[type="checkbox"]');
+          if (cb && !cb.checked) { cb.click(); return 'checking'; }
+          const btn = f.querySelector('button.custom-button') || f.querySelector('button');
+          if (!btn) return 'no-button';
+          if (btn.disabled || btn.classList.contains('disabled')) return 'waiting';
+          btn.click();
+          return 'confirmed';
+        })()""")
+        if step in ("no-dialog", "confirmed"):
+            break
+        time.sleep(0.5)
+    if step in ("confirmed", "no-dialog"):
+        time.sleep(0.5)
+        wait_no_mask(page)
+        info = switch_state(page, "原创声明")
+        print(f"原创声明：{'已开启' if info.get('on') else '未开启'}（弹窗 {step}）")
+        return 0 if info.get("on") else 1
+    die(f"原创声明确认弹窗没能通过：{step}（勾选框或按钮没就绪）")
+
+
+def cmd_schedule(args) -> int:
+    """打开定时发布开关并写入时间。args.at 形如 2026-10-06 21:00。"""
+    page, _ = bridge()
+    target = args.at.strip()
+    try:
+        when = datetime.strptime(target, "%Y-%m-%d %H:%M")
+    except ValueError:
+        die(f"时间格式应为 'YYYY-MM-DD HH:MM'，收到 {target!r}")
+    if when <= datetime.now() + timedelta(minutes=30):
+        die(f"定时时间 {target} 距现在不足 30 分钟或已过")
+
+    set_switch(page, "定时发布", True)
+    time.sleep(1)
+
+    # 别用 `.post-time-wrapper input`：那里面第一个 input 是开关自己的
+    # checkbox，点它等于把定时发布又关掉。日期框要按 datepicker 祖先找。
+    sel = page.evaluate("""(() => {
+      // 清掉上一次留下的标记：否则 querySelector 会命中还在 DOM 里的旧元素
+      // （开关自己的 checkbox 就曾被打过标记，点它等于把定时发布关掉）。
+      document.querySelectorAll('[data-xhs-time-input]')
+        .forEach(el => el.removeAttribute('data-xhs-time-input'));
+      const i = [...document.querySelectorAll('input.d-text')].find(
+        el => el.closest('[class*=datepicker]')
+              && el.getBoundingClientRect().height > 0);
+      if (!i) return '';
+      i.setAttribute('data-xhs-time-input', '1');
+      return 'input[data-xhs-time-input]';
+    })()""")
+    if not sel:
+        die("找不到定时时间输入框——页面可能改版")
+
+    pos = json.loads(page.evaluate(
+        "(() => { const i = document.querySelector(%s);"
+        "i.scrollIntoView({block:'center'});"
+        "const r = i.getBoundingClientRect();"
+        "return JSON.stringify({x:r.left+r.width/2, y:r.top+r.height/2}); })()"
+        % json.dumps(sel)))
+    page.mouse_click(pos["x"], pos["y"])
+    time.sleep(0.5)
+    page.select_all_text(sel)
+    time.sleep(0.3)
+    page.type_text(target, delay_ms=40)
+    time.sleep(0.6)
+    page.press_key("Tab")
+    time.sleep(1.5)
+
+    read = lambda: page.evaluate(
+        "(document.querySelector(%s)||{}).value || ''" % json.dumps(sel))
+    got = read()
+    if got != target:
+        # 富交互日期组件有时吞掉输入法式键入，用原生 setter 兜底再触发事件。
+        page.evaluate("""(() => {
+          const i = document.querySelector(%s);
+          const set = Object.getOwnPropertyDescriptor(
+            window.HTMLInputElement.prototype, 'value').set;
+          set.call(i, %s);
+          ['input', 'change'].forEach(k =>
+            i.dispatchEvent(new Event(k, {bubbles: true})));
+        })()""" % (json.dumps(sel), json.dumps(target)))
+        time.sleep(1)
+        page.press_key("Tab")
+        time.sleep(1)
+        got = read()
+
+    if got != target:
+        die(f"定时时间写入失败：页面读到 {got!r}，期望 {target!r}")
+
+    on = switch_state(page, "定时发布")
+    print(f"定时发布：{'已开启' if on.get('on') else '未开启'}，时间 {got}")
+    return 0
+
+
+
 def cmd_verify(args) -> int:
     page, _ = bridge()
     got = readback(page)
@@ -609,6 +804,13 @@ def main() -> int:
     p = sub.add_parser("collection", help="加入合集")
     p.add_argument("name")
     p.set_defaults(fn=cmd_collection)
+
+    sub.add_parser("original", help="打开原创声明（含须知弹窗）").set_defaults(
+        fn=cmd_original)
+
+    p = sub.add_parser("schedule", help="打开定时发布并设置时间")
+    p.add_argument("at", help="发布时间，格式 YYYY-MM-DD HH:MM")
+    p.set_defaults(fn=cmd_schedule)
 
     p = sub.add_parser("verify", help="回读表单并比对")
     p.add_argument("--dir", default=None)
