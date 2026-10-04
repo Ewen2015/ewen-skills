@@ -1,0 +1,477 @@
+#!/usr/bin/env python3
+"""排期计算：把发布计划、本地库存、平台定时队列合成一张未来排期表。
+
+只做排期判断，不写文案、不做图、不发布——那些归 rednote-post。
+
+用法：
+  python3 plan.py init   [--workspace W]                 建计划骨架
+  python3 plan.py report [--workspace W] [--state F]     出排期与缺口报告
+                         [--weeks 4] [--json]
+
+workspace 布局（默认 $XHS_WORKSPACE，未设则 ~/Documents/rednote）：
+  <workspace>/
+  |-- plan.json          发布计划（频率/时段/栏目/目标）
+  |-- topics.md          选题池，一行一条，`- [ ]` 未用 / `- [x]` 已用
+  |-- posts/             每个笔记一个 rednote-post 目录
+  `-- state/             xhs_state.py 的输出（可选，喂给 --state）
+
+字段与口径见 references/plan-schema.md。
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import statistics
+import sys
+from datetime import datetime, time as dtime, timedelta
+from pathlib import Path
+
+DEFAULT_TARGETS = {"ready_weeks": 2, "semi_weeks": 4, "topic_weeks": 6}
+IMAGE_EXT = {".png", ".jpg", ".jpeg", ".webp"}
+WEEKDAY_CN = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
+
+PLAN_TEMPLATE = {
+    "account": "",
+    "cadence": {
+        "posts_per_week": 2,
+        "weekdays": [2, 6],
+        "slots": ["20:00"],
+        "note": "weekdays 用 0=周一 … 6=周日；slots 是当天几点发",
+    },
+    "pillars": [
+        {"name": "读书笔记", "share": 0.6},
+        {"name": "思维模型", "share": 0.4},
+    ],
+    "targets": dict(DEFAULT_TARGETS),
+    "paused": False,
+}
+
+TOPICS_TEMPLATE = """# 选题池
+
+一行一条。`- [ ]` 未用，`- [x]` 已用。选题多于成品是正常的——
+每条成品背后通常要废掉一两个选题，池子太浅就会断更。
+
+- [ ] 示例选题：为什么读了很多书还是做不好决定
+"""
+
+
+def die(msg: str, code: int = 2):
+    print(f"错误：{msg}", file=sys.stderr)
+    sys.exit(code)
+
+
+def workspace(arg: str | None) -> Path:
+    if arg:
+        return Path(arg).expanduser().resolve()
+    env = os.environ.get("XHS_WORKSPACE")
+    if env:
+        return Path(env).expanduser().resolve()
+    return (Path.home() / "Documents" / "rednote").resolve()
+
+
+def cmd_init(args) -> int:
+    ws = workspace(args.workspace)
+    (ws / "posts").mkdir(parents=True, exist_ok=True)
+    (ws / "state").mkdir(parents=True, exist_ok=True)
+    plan = ws / "plan.json"
+    topics = ws / "topics.md"
+    if plan.exists():
+        print(f"已存在，未覆盖：{plan}")
+    else:
+        plan.write_text(json.dumps(PLAN_TEMPLATE, ensure_ascii=False, indent=2) + "\n",
+                        encoding="utf-8")
+        print(f"已创建 {plan} —— 先把它改成你的实际频率和时段")
+    if not topics.exists():
+        topics.write_text(TOPICS_TEMPLATE, encoding="utf-8")
+        print(f"已创建 {topics}")
+    return 0
+
+
+def load_json(path: Path):
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        return None
+    except ValueError as e:
+        die(f"{path} 不是合法 JSON：{e}")
+
+
+def has_text(path: Path) -> bool:
+    try:
+        return bool(path.read_text(encoding="utf-8").strip())
+    except (FileNotFoundError, UnicodeDecodeError):
+        return False
+
+
+def classify_posts(ws: Path) -> tuple[list[dict], list[dict]]:
+    """把 posts/ 下的目录分成"可直接发"和"半成品"。
+
+    可直接发的判据来自 rednote-post 的交付物：标题、正文、至少一张成图。
+    只有目录没有内容不算库存——那只是占了个名字。
+    """
+    ready, semi = [], []
+    posts_dir = ws / "posts"
+    if not posts_dir.is_dir():
+        return ready, semi
+    for d in sorted(posts_dir.iterdir()):
+        if not d.is_dir():
+            continue
+        title = has_text(d / "title.txt")
+        body = has_text(d / "body.txt")
+        images = [f for f in d.iterdir()
+                  if f.is_file() and f.suffix.lower() in IMAGE_EXT]
+        manifest = (d / "manifest.json").exists()
+        entry = {"name": d.name, "title": _first_line(d / "title.txt"),
+                 "images": len(images), "manifest": manifest,
+                 "missing": [n for n, ok in (("标题", title), ("正文", body),
+                                             ("配图", bool(images))) if not ok]}
+        (ready if title and body and images else semi).append(entry)
+    return ready, semi
+
+
+def _first_line(path: Path) -> str | None:
+    if not has_text(path):
+        return None
+    return path.read_text(encoding="utf-8").strip().splitlines()[0][:60]
+
+
+def count_topics(ws: Path) -> tuple[int, int]:
+    f = ws / "topics.md"
+    if not f.exists():
+        return 0, 0
+    open_n = done_n = 0
+    for line in f.read_text(encoding="utf-8").splitlines():
+        s = line.strip()
+        if s.startswith("- [ ]"):
+            open_n += 1
+        elif s.startswith("- [x]") or s.startswith("- [X]"):
+            done_n += 1
+    return open_n, done_n
+
+
+def iter_slots(start: datetime, weeks: int, weekdays: list[int],
+               slots: list[str]) -> list[datetime]:
+    out = []
+    day = start.date()
+    for i in range(weeks * 7 + 1):
+        d = day + timedelta(days=i)
+        if d.weekday() not in weekdays:
+            continue
+        for s in slots:
+            hh, mm = (int(x) for x in s.split(":"))
+            dt = datetime.combine(d, dtime(hh, mm))
+            if dt > start:
+                out.append(dt)
+    return sorted(out)
+
+
+def parse_post_time(text: str | None) -> datetime | None:
+    if not text:
+        return None
+    for fmt in ("%Y-%m-%d %H:%M", "%Y-%m-%d %H:%M:%S"):
+        try:
+            return datetime.strptime(text.strip(), fmt)
+        except ValueError:
+            continue
+    return None
+
+
+def build_schedule(slots: list[datetime], scheduled: list[dict],
+                   ready: list[dict]) -> tuple[list[dict], list[dict]]:
+    """平台已定时的先占位，剩下的用本地成品按顺序补。"""
+    rows = [{"at": s, "source": None, "title": None} for s in slots]
+    unmatched = []
+    for item in scheduled:
+        at = parse_post_time(item.get("time"))
+        if at is None:
+            unmatched.append(item)
+            continue
+        best, best_gap = None, None
+        for r in rows:
+            if r["source"] is not None:
+                continue
+            gap = abs((r["at"] - at).total_seconds())
+            if best_gap is None or gap < best_gap:
+                best, best_gap = r, gap
+        if best is not None and best_gap is not None and best_gap <= 6 * 3600:
+            best["source"] = "scheduled"
+            best["title"] = item.get("title")
+            best["noteId"] = item.get("noteId")
+        else:
+            unmatched.append(item)
+
+    i = 0
+    for r in rows:
+        if r["source"] is not None:
+            continue
+        if i < len(ready):
+            r["source"] = "local"
+            r["title"] = ready[i]["title"] or ready[i]["name"]
+            r["post"] = ready[i]["name"]
+            i += 1
+    return rows, unmatched
+
+
+# 新笔记前几天的阅读量还在涨，拿"阅读/天"去比会把刚发的误判成最好的时段。
+SETTLE_DAYS = 3
+
+
+def hour_buckets(rows: list[dict]) -> tuple[list[dict], int]:
+    """按发布小时聚合历史数据，返回 (分档, 因太新被排除的篇数)。
+
+    阅读量是累计值：昨天发的天然比去年发的低，所以这里同时给
+    「阅读/天」，否则会把"发得早"误判成"时段好"。但发布不满
+    SETTLE_DAYS 天的笔记两个指标都不可比，直接排除。
+    """
+    now = datetime.now()
+    groups: dict[int, list[dict]] = {}
+    too_fresh = 0
+    for r in rows:
+        at = parse_post_time(r.get("time"))
+        if at is None:
+            continue
+        age_days = (now - at).total_seconds() / 86400.0
+        if age_days < SETTLE_DAYS:
+            too_fresh += 1
+            continue
+        reads = r.get("reads") or 0
+        groups.setdefault(at.hour, []).append(
+            {"reads": reads, "per_day": reads / age_days,
+             "engage": (r.get("likes") or 0) + (r.get("collects") or 0)}
+        )
+    out = []
+    for h in sorted(groups):
+        g = groups[h]
+        out.append({
+            "hour": h,
+            "n": len(g),
+            "median_reads": statistics.median(x["reads"] for x in g),
+            "median_reads_per_day": round(statistics.median(x["per_day"] for x in g), 1),
+            "median_engage": statistics.median(x["engage"] for x in g),
+        })
+    return out, too_fresh
+
+
+def reminder_advice(buffer_weeks: float, ppw: float, target_ready: float) -> dict:
+    if ppw <= 0:
+        return {"mode": "ad-hoc", "why": "计划里没填频率（posts_per_week=0），无法判断节奏。"}
+    if buffer_weeks < 1:
+        return {"mode": "cron",
+                "why": f"成品缓冲只有 {buffer_weeks:.1f} 周，低于 1 周的最低线，随时会断更。",
+                "frequency": "每周一次 + 每次发出后立刻补货"}
+    if buffer_weeks < target_ready:
+        return {"mode": "cron",
+                "why": f"成品缓冲 {buffer_weeks:.1f} 周，低于 {target_ready:.0f} 周的目标线。",
+                "frequency": "每周一次"}
+    if buffer_weeks >= 4 and ppw <= 1:
+        return {"mode": "ad-hoc",
+                "why": f"缓冲 {buffer_weeks:.1f} 周且频率只有 {ppw:g} 篇/周，定期提醒只会变成噪音。"}
+    return {"mode": "ad-hoc",
+            "why": f"缓冲 {buffer_weeks:.1f} 周，够用；等掉到 {target_ready:.0f} 周以下再开定期提醒。"}
+
+
+def render_text(rep: dict) -> str:
+    L = []
+    a = L.append
+    c = rep["cadence"]
+    inv = rep["inventory"]
+    tgt = rep["targets"]
+    ppw = c["posts_per_week"]
+    a(f"# 排期体检 {rep['generated_at']}")
+    a("")
+    a(f"计划：每周 {ppw:g} 篇 · "
+      f"{'/'.join(WEEKDAY_CN[d] for d in c['weekdays'])} · "
+      f"{'/'.join(c['slots'])}")
+    a(f"库存：可直接发 {inv['ready_count']} 篇 · 半成品 {inv['semi_count']} 篇 · "
+      f"选题池 {inv['topics_open']} 条未用")
+    a(f"覆盖率：现库存可撑 {rep['coverage']['weeks']:.1f} 周"
+      f"（目标 {tgt['ready_weeks']} 周 = {inv['target_ready']:.0f} 篇）")
+    if rep.get("paused"):
+        a("")
+        a("**计划处于停更状态（paused=true）**——下面不排期、不报空档。"
+          "要恢复更新就把 plan.json 里的 paused 改回 false。")
+    a("")
+    if rep.get("paused"):
+        return "\n".join(L)
+    a(f"## 未来 {rep['horizon_weeks']} 周排期")
+    a("")
+    a("| 时间 | 内容 | 来源 |")
+    a("| --- | --- | --- |")
+    for r in rep["schedule"]:
+        at = datetime.fromisoformat(r["at"])
+        when = f"{at:%Y-%m-%d} {WEEKDAY_CN[at.weekday()]} {at:%H:%M}"
+        src = r["source"]
+        if src == "scheduled":
+            label, title = "已定时", r["title"] or "(无标题)"
+        elif src == "off-plan":
+            label, title = "已定时·计划外", r["title"] or "(无标题)"
+        elif src == "local":
+            label, title = "本地成品", r["title"] or ""
+        else:
+            label, title = "**缺口**", "——"
+        a(f"| {when} | {title} | {label} |")
+    a("")
+    g = rep["gap"]
+    if g["empty_slots"]:
+        a(f"**未来 {rep['horizon_weeks']} 周有 {g['empty_slots']} 个空档。**"
+          f"要回到 {tgt['ready_weeks']} 周缓冲，还需要 {g['to_target']} 篇成品。")
+    else:
+        a(f"未来 {rep['horizon_weeks']} 周排满，没有空档。")
+    a("")
+    a("## 素材积累量建议")
+    a("")
+    a("| 层级 | 目标 | 现在 | 还缺 |")
+    a("| --- | --- | --- | --- |")
+    rows = [
+        ("可直接发（过实测、能立刻排）", inv["target_ready"], tgt["ready_weeks"],
+         inv["ready_count"]),
+        ("半成品（有选题有素材）", inv["target_semi"], tgt["semi_weeks"],
+         inv["semi_count"]),
+        ("选题池（未用）", inv["target_topics"], tgt["topic_weeks"],
+         inv["topics_open"]),
+    ]
+    for name, goal, weeks, have in rows:
+        need = max(0, int(goal - have + 0.999))
+        a(f"| {name} | {goal:.0f}（{weeks} 周） | {have} | {need or '—'} |")
+    a("")
+    a("成品按 2 周缓冲，是为了扛一次出差或生病还不断更；选题池按 6 周，"
+      "因为一条成品通常要废掉一两次选题，池子浅了就会临时凑内容。")
+    if rep.get("timing"):
+        t = rep["timing"]
+        a("")
+        a(f"## 账号自己的时段数据（可用样本 {t['usable']} 篇"
+          f"{'，另有 %d 篇太新已排除' % t['too_fresh'] if t['too_fresh'] else ''}）")
+        a("")
+        a("| 发布小时 | 样本 | 阅读中位数 | 阅读/天 中位数 | 互动中位数 |")
+        a("| --- | --- | --- | --- | --- |")
+        for b in t["buckets"]:
+            a(f"| {b['hour']:02d}:00 | {b['n']} | {b['median_reads']:.0f} | "
+              f"{b['median_reads_per_day']:.1f} | {b['median_engage']:.0f} |")
+        if t["thin"]:
+            a("")
+            a("样本太薄（每档至少 3 篇才有意义）——先按 references/timing.md 的"
+              "基线时段发，攒够样本再按上表调整。")
+    if rep.get("platform"):
+        a("")
+        a("## 平台状态")
+        a(f"- 定时发布队列：{rep['platform']['scheduled_count']} 篇")
+        a(f"- 审核中：{rep['platform']['in_review_count']} 篇")
+        dc = rep["platform"].get("draft_counts") or {}
+        if dc:
+            parts = " / ".join(f"{k} {v}" for k, v in dc.items())
+            a(f"- 草稿箱（浏览器本地，清浏览器数据就没了）：{parts}")
+    a("")
+    a("## 提醒建议")
+    a(f"- 方式：**{rep['reminder']['mode']}**")
+    a(f"- 理由：{rep['reminder']['why']}")
+    if rep["reminder"].get("frequency"):
+        a(f"- 频率：{rep['reminder']['frequency']}")
+        a("- 配置：见 references/reminders.md（用 automation 工具建，不要手写 cron 字符串）")
+    return "\n".join(L)
+
+
+def cmd_report(args) -> int:
+    ws = workspace(args.workspace)
+    plan = load_json(ws / "plan.json")
+    if plan is None:
+        die(f"没找到 {ws / 'plan.json'}。先跑：python3 plan.py init --workspace {ws}")
+    cad = plan.get("cadence") or {}
+    ppw = float(cad.get("posts_per_week") or 0)
+    weekdays = cad.get("weekdays") or [2, 6]
+    slots_txt = cad.get("slots") or ["20:00"]
+    targets = {**DEFAULT_TARGETS, **(plan.get("targets") or {})}
+
+    ready, semi = classify_posts(ws)
+    topics_open, topics_done = count_topics(ws)
+
+    state = load_json(Path(args.state).expanduser()) if args.state else None
+    scheduled = ((state or {}).get("queue") or {}).get("scheduled") or []
+    drafts = ((state or {}).get("drafts") or {})
+    hist = ((state or {}).get("history") or {}).get("published") or []
+
+    now = datetime.now()
+    paused = bool(plan.get("paused"))
+    slots = [] if paused else iter_slots(now, args.weeks, weekdays, slots_txt)
+    rows, unmatched = build_schedule(slots, scheduled, ready)
+    for u in unmatched:
+        at = parse_post_time(u.get("time"))
+        if at is not None:
+            rows.append({"at": at, "source": "off-plan", "title": u.get("title"),
+                         "noteId": u.get("noteId")})
+    rows.sort(key=lambda r: r["at"])
+
+    buffer_weeks = (len(ready) / ppw) if ppw else 0.0
+    target_ready = ppw * targets["ready_weeks"]
+    empty = sum(1 for r in rows if r["source"] is None)
+    to_target = max(0, int(target_ready - len(ready) + 0.999))
+
+    timing = None
+    if hist:
+        buckets, too_fresh = hour_buckets(hist)
+        usable = sum(b["n"] for b in buckets)
+        timing = {"total": len(hist), "usable": usable, "too_fresh": too_fresh,
+                  "buckets": buckets,
+                  "thin": usable < 12 or (buckets and max(b["n"] for b in buckets) < 3)}
+
+    rep = {
+        "generated_at": f"{now:%Y-%m-%d %H:%M}",
+        "workspace": str(ws),
+        "cadence": {"posts_per_week": ppw, "weekdays": weekdays, "slots": slots_txt},
+        "targets": targets,
+        "inventory": {
+            "ready_count": len(ready), "semi_count": len(semi),
+            "topics_open": topics_open, "topics_done": topics_done,
+            "target_ready": target_ready,
+            "target_semi": ppw * targets["semi_weeks"],
+            "target_topics": ppw * targets["topic_weeks"],
+            "ready": ready, "semi": semi,
+        },
+        "coverage": {"weeks": buffer_weeks,
+                     "horizon_weeks": args.weeks},
+        "horizon_weeks": args.weeks,
+        "schedule": [{**r, "at": r["at"].isoformat()} for r in rows],
+        "gap": {"empty_slots": empty, "to_target": to_target,
+                "horizon_weeks": args.weeks},
+        "unmatched_scheduled": unmatched,
+        "timing": timing,
+        "platform": None,
+        "paused": paused,
+        "reminder": ({"mode": "ad-hoc",
+                      "why": "计划处于停更状态（plan.json 的 paused=true），排期与提醒都停。"}
+                     if paused else
+                     reminder_advice(buffer_weeks, ppw, targets["ready_weeks"])),
+    }
+    if state:
+        rep["platform"] = {
+            "scheduled_count": len(scheduled),
+            "in_review_count": ((state.get("queue") or {}).get("in_review_count") or 0),
+            "draft_counts": drafts.get("counts"),
+        }
+
+    if args.json:
+        print(json.dumps(rep, ensure_ascii=False, indent=1))
+    else:
+        print(render_text(rep))
+    return 0
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description="小红书发布排期计算")
+    sub = ap.add_subparsers(dest="cmd", required=True)
+    p = sub.add_parser("init", help="建 workspace 与 plan.json")
+    p.add_argument("--workspace", default=None)
+    p.set_defaults(fn=cmd_init)
+    p = sub.add_parser("report", help="出排期与缺口报告")
+    p.add_argument("--workspace", default=None)
+    p.add_argument("--state", default=None, help="xhs_state.py 输出的 JSON")
+    p.add_argument("--weeks", type=int, default=4)
+    p.add_argument("--json", action="store_true")
+    p.set_defaults(fn=cmd_report)
+    args = ap.parse_args()
+    return args.fn(args)
+
+
+if __name__ == "__main__":
+    sys.exit(main())
