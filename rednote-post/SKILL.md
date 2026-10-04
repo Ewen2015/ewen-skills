@@ -40,6 +40,10 @@ metadata:
 话题。**正文最后一行单独放 `#标签`，用空格分隔**（如 `#意会认知 #波兰尼 #读书`），
 不要另填 `--tags`。
 
+**正文不能加粗**——平台不支持富文本，重音只能用 emoji／断行／符号，写法见
+[`references/copywriting.md`](references/copywriting.md#正文没有加粗重音只能用这三招)，
+别去试 `**字**`。
+
 > 标签必须逐个从联想下拉里用**真点击**选中才会变成话题；上游 CLI 用的是合成 JS 点击，
 > tiptap 会忽略，结果是只有最后一个标签生效。`fill` 已经绕开这条坏路径自己做，见
 > [`references/publishing.md`](references/publishing.md#话题标签必须用真点击这是最容易踩的坑)。
@@ -49,6 +53,9 @@ metadata:
 [`assets/cover.html`](assets/cover.html) 和 [`assets/card.html`](assets/card.html) 改内容。
 尺寸固定 1080×1440（3:4，小红书信息流原生比例）。字号下限、卡片类型和素材处理见
 [`references/cards.md`](references/cards.md)。
+
+**强调色用 Volvo Safety Orange `#FD6408`（`--accent`），不要用绿色**；它是信号色，
+只点短句与关键词，成段正文走 `--ink2`（橙色在暖纸底上只有约 2.6:1 对比度）。
 
 **源素材要转成 RGB PNG 并确认方向**——手机拍的 HEIC 常带 EXIF 旋转，直接 `Image.open()` 会歪。
 

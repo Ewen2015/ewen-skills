@@ -4,7 +4,9 @@
  * 1 × (屏宽 / 1080)。正文低于 24px 在手机上就吃力了。改这套令牌，
  * 不要逐处改字号——也不要用缩字号来解决放不下的问题（放不下就删内容）。
  *
- * 换配色只改下面 6 个颜色变量。
+ * 换配色只改下面这一组颜色变量（在 :root 里）。
+ * 强调色 1 沿用 Volvo Cars 的 Safety Orange（见 volvo-cars-powerpoint skill，accent4）；
+ * 改 --accent 时必须同步改 --accent-wash，两者是同一色的字与底。
  */
 
 :root{
@@ -14,7 +16,8 @@
   --ink2:#332E25;       /* 次文字 */
   --muted:#6B6459;      /* 弱文字 */
   --rule:#DAD2C3;       /* 分割线 */
-  --accent:#2E4A44;     /* 强调色 1：深绿，做信号 */
+  --accent:#FD6408;     /* 强调色 1：Volvo Safety Orange，做信号 */
+  --accent-wash:rgba(253,100,8,.06);  /* 强调色的极淡底，用于引用块/信息块 */
   --accent2:#9A7B45;    /* 强调色 2：金 */
   --serif:"Songti SC","STSong","Source Han Serif SC",serif;
   --sans:"PingFang SC","Hiragino Sans GB","Helvetica Neue",Arial,sans-serif;
@@ -72,14 +75,14 @@ h1{font-family:var(--serif);font-weight:600;font-size:74px;line-height:1.24;
 .use{margin-top:6px;font-size:24px;line-height:1.44;color:var(--accent);}
 
 /* ---- 两种信息块 -------------------------------------------------------- */
-.quote{margin-top:40px;padding:30px 36px;background:rgba(46,74,68,.055);
+.quote{margin-top:40px;padding:30px 36px;background:var(--accent-wash);
   border-left:4px solid var(--accent);position:relative;z-index:2;}
 .quote b{display:block;font-family:var(--serif);font-size:50px;color:var(--accent);
   line-height:1.25;}
 .quote i{display:block;margin-top:12px;font-style:normal;font-size:27px;
   color:var(--muted);letter-spacing:.02em;}
 
-.box{margin-top:20px;padding:22px 32px;background:rgba(46,74,68,.055);
+.box{margin-top:20px;padding:22px 32px;background:var(--accent-wash);
   border-left:4px solid var(--accent);position:relative;z-index:2;}
 .box b{font-size:27px;letter-spacing:.14em;color:var(--accent);}
 .box p{margin-top:10px;font-size:24px;line-height:1.5;color:var(--ink2);}
