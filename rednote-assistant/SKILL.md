@@ -3,42 +3,118 @@ name: rednote-assistant
 description: >-
   小红书发布排期助理：定更新频率与发布时段、看平台上有没有未来定时发布的笔记、
   盘草稿箱、算现有成品能撑几周、指出排期缺口、按账号自己的历史数据挑最佳发布时间、
-  给出素材积累量目标，并判断该用定期提醒还是随问随答。
+  给出素材积累量目标，并判断该用定期提醒还是随问随答。还负责发布前的最后一道检查：
+  检查全绿且计划已授权时，直接发布，不再回头找用户确认。
   当用户说"更新计划""发布频率""排期""内容日历""草稿够不够""下次发什么"
-  "什么时候发最好""有没有定时发布""排期还剩几周""rednote 助理"时激活。
-  不适用于：写标题正文、做卡片图、实际发布、修改已发布笔记——那些走 rednote-post。
+  "什么时候发最好""有没有定时发布""排期还剩几周""检查一下能发就发""rednote 助理"时激活。
+  不适用于：写标题正文、做卡片图、修改已发布笔记——那些走 rednote-post。
 metadata:
-  short-description: 小红书发布排期与库存体检（只排期，不写不发）
+  short-description: 小红书排期体检 + 发布就绪检查（检查全绿可代为发布）
 ---
 
 # 小红书排期助理
 
-只管**什么时候发什么、还够发多久**。文案、卡片图、发布动作都在 `rednote-post`，
-这个 skill 不写、不做图、不点发布。
+只管**什么时候发什么、还够发多久、这一条能不能发**。文案、卡片图和发布动作本身都在
+`rednote-post`——本 skill 不写文案、不做图，但**检查全绿时有权直接调用 `rednote-post`
+把笔记发出去，不必再问一次**。
 
 下面命令里的 `<skill>` 指本文件所在目录
 （通常是 `${CODEX_HOME:-$HOME/.codex}/skills/rednote-assistant`）。
 按字面写 `scripts/plan.py` 会找不到——当前工作目录通常是用户的项目，不是 skill 目录。
 
-## 两个脚本
+## 三个命令
 
 | 回答什么问题 | 命令 | 触不触网 |
 | --- | --- | --- |
 | 平台上现在有什么：定时发布队列、审核中、草稿箱、已发布数据 | `python3 <skill>/scripts/xhs_state.py` | 要浏览器桥接 |
-| 计划、库存、覆盖率、缺口、时段、提醒（纯本地算） | `python3 <skill>/scripts/plan.py` | 不要 |
+| 计划、库存、覆盖率、缺口、时段、提醒（纯本地算） | `python3 <skill>/scripts/plan.py report` | 不要 |
+| 发布就绪检查：这一条够不够格直接发 | `python3 <skill>/scripts/plan.py ready` | 不要（版式实测要 Chrome） |
 
 ## 铁律
 
 1. **计划先行。** 没有 `plan.json` 里的**频率**，就无从回答"草稿够不够"——
    "够"永远是相对频率说的。缺计划时先 `plan.py init`，把频率/时段/栏目拿给用户确认，
    **不要替用户猜一个频率**然后据此下结论。
-2. **只读。** 本 skill 只切 tab、开抽屉、滚动、读文本。不改计划外的任何东西，
-   不发不删不改笔记。发布永远走 `rednote-post`（它自带确认闸门）。
+2. **默认只读，授权后才动手。** 平时只切 tab、开抽屉、滚动、读文本，不改计划外的任何东西，
+   不发不删不改笔记。唯一的例外是「发布授权」——`plan.json` 里写了 `publish_policy: "auto"`
+   且发布就绪检查全绿时，本 skill 直接发布，不再回头确认；其余一切情况照旧停下来问。
 3. **草稿箱不是库存。** 平台草稿存在**当前浏览器本地**，清浏览器数据就没了，
    也不跟账号走。真正的库存是 workspace 里 `posts/` 下过了实测的成品目录。
 4. **列表是懒加载的。** 笔记管理一屏只有 10–20 张，账号总篇数往往上百。
    只看第一屏就断言"没有定时发布"是本 skill 最容易犯的错——脚本已经做了滚动收集，
    但 `--max` 给小了照样看不全，报告里要如实说扫了多少张。
+
+## 发布授权
+
+用户已经把"检查过关就发"的权限交给本 skill。开关在 `plan.json`：
+
+```json
+{"publish_policy": "auto"}
+```
+
+- `auto` —— 就绪检查全绿时直接发，不再问用户。
+- `confirm`（或字段缺失）—— 每次都回到确认闸门，把内容摆给用户看再发。
+
+**这条权限只覆盖"发不发、发在哪一档"两个问题**，不覆盖内容本身：标题、正文、图片、
+合集仍然来自已经做完的 `rednote-post` 成品目录，本 skill 不替用户改一个字。
+
+### 发布就绪检查
+
+```bash
+python3 <skill>/scripts/plan.py ready --workspace <workspace> \
+    --post <post-dir> --state <workspace>/state/state.json
+```
+
+退出码 `0` 表示全绿。逐条验：
+
+| 检查 | 不过会怎样 |
+| --- | --- |
+| 计划未停更（`paused` 不为 true） | 停更期不自动发 |
+| `publish_policy` 是 `auto` | 没授权就回到确认闸门 |
+| 成品唯一（给了 `--post`，或 `posts/` 下只有一篇可直接发） | 多篇候选时让用户挑 |
+| 交付物齐全（`manifest.json` / `title.txt` / `body.txt` / 至少一张图） | 缺件不发 |
+| 标题 ≤ 20 字 | CLI 会硬失败，先去改 |
+| 正文末行是标签行 | 否则标签会退化成普通文字 |
+| `render_cards.py` 全绿 | 版式没过实测，不许发 |
+| 有空闲时段 | 未来几周排满了就没得发 |
+
+正文超过 1000 字只提醒不拦（平台本身也只警告）。
+
+**这一步不验平台回读**——那是 `fill` 之后 `verify` 的事。两步都过才算数：
+
+1. `plan.py ready` 全绿；
+2. `xhs.py fill` + `xhs.py verify` 回读一致（标题、正文长度、图片张数、话题标签数）。
+
+只要有一条不过，就把没过的项摆给用户看，等指示，不要硬发。
+
+### 授权范围内的动作
+
+全绿之后一口气做完，中途不再找用户确认：
+
+```bash
+python3 <rednote-post>/scripts/xhs.py status          # 桥接就绪
+python3 <rednote-post>/scripts/xhs.py reset           # 回到干净发布页
+python3 <rednote-post>/scripts/xhs.py fill --dir <post-dir> --collection "<合集名>"
+python3 <rednote-post>/scripts/xhs.py verify --dir <post-dir> --collection "<合集名>"
+python3 <rednote-post>/scripts/xhs.py original        # 计划要求原创声明时
+python3 <rednote-post>/scripts/xhs.py schedule "<YYYY-MM-DD HH:MM>"   # 用就绪检查给的空档
+python3 <rednote-post>/scripts/xhs.py publish
+python3 <rednote-post>/scripts/xhs.py check-published "<标题>"
+```
+
+发完回读一次平台状态（`xhs_state.py queue`）确认队列里真有这条，再刷新
+`state/state.json` 与 `topics.md`。定时发布的笔记不在「已发布」页签，别看错地方。
+
+### 什么情况下必须停下来问
+
+- 检查有任一条不过。
+- `posts/` 下有多篇候选，或这轮没说清要发哪一篇。
+- 要改标题、正文、图片本身——那是内容决策，不是排期决策。
+- 合集、可见范围、原创声明在计划和历史里都找不到依据。
+- 平台回读对不上（话题标签数不符、图片张数不符）。
+- 桥接不通、登错账号、页面要求二次验证。
+
+宁可不发，也不要发一条说不清来路的笔记。
 
 ## 工作流
 
@@ -53,7 +129,8 @@ python3 <skill>/scripts/plan.py init --workspace <workspace>
 [`references/plan-schema.md`](references/plan-schema.md)。
 
 频率这一步必须问用户，不能自己定：能长期维持的频率取决于他每周真的能拿出多少时间。
-给建议而不是给结论——见 `references/plan-schema.md` 的「频率怎么选」。
+给建议而不是给结论——见 [`references/plan-schema.md`](references/plan-schema.md) 的「频率怎么选」。
+`publish_policy` 也要在这一步跟用户讲清楚，别默默替他打开自动发布。
 
 ### 2. 扫平台状态
 
@@ -97,16 +174,24 @@ python3 <skill>/scripts/plan.py report --workspace <workspace> \
 [`references/reminders.md`](references/reminders.md)。要开定期提醒时，用 automation 工具建，
 **不要手写 RRULE 字符串**。
 
+### 6. 检查并发布
+
+用户说"检查一下能发就发""把这条发掉"时，入口就是这一步——不必再走一遍全套报告。
+跑 `plan.py ready`；全绿就按「发布授权」那一节做完，然后一句话汇报结果
+（标题、几张图、合集、公开范围、原创声明、立即发还是定时到哪一档、noteId）。
+没过就把不过的项列出来等指示。
+
 ## 什么时候该改计划
 
 - 连续两周发不满计划 → 频率定高了，下调，不要靠更长的缓冲硬撑。
 - 某种内容明显跑得比别的快 → 调 `pillars` 的配比。
 - 账号要停更一段时间 → 在 `plan.json` 里加 `paused`，别让报告继续报"空档"。
+- 不想让它自动发了 → 把 `publish_policy` 改回 `confirm`，立刻回到每次都问。
 
 ## 参考文件
 
 - [`references/plan-schema.md`](references/plan-schema.md)——`plan.json`/`topics.md` 字段、
-  workspace 布局、频率与素材积累量的口径
+  workspace 布局、频率与素材积累量的口径、`publish_policy` 与就绪检查
 - [`references/timing.md`](references/timing.md)——最佳发布时段：什么时候信自有数据、
   什么时候退回基线，以及为什么不能直接比阅读量
 - [`references/reminders.md`](references/reminders.md)——定期提醒还是随问随答，

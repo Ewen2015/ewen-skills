@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 """排期计算：把发布计划、本地库存、平台定时队列合成一张未来排期表。
 
-只做排期判断，不写文案、不做图、不发布——那些归 rednote-post。
+只做排期判断，不写文案、不做图。`ready` 全绿且 plan.json 里
+`publish_policy=auto` 时，本 skill 才有权直接走 rednote-post 发布，不必再问一次。
 
 用法：
   python3 plan.py init   [--workspace W]                 建计划骨架
   python3 plan.py report [--workspace W] [--state F]     出排期与缺口报告
                          [--weeks 4] [--json]
+  python3 plan.py ready  [--workspace W] [--post D]      发布就绪检查
+                         [--state F] [--weeks 4] [--json]
 
 workspace 布局（默认 $XHS_WORKSPACE，未设则 ~/Documents/rednote）：
   <workspace>/
@@ -30,6 +33,10 @@ from pathlib import Path
 
 DEFAULT_TARGETS = {"ready_weeks": 2, "semi_weeks": 4, "topic_weeks": 6}
 IMAGE_EXT = {".png", ".jpg", ".jpeg", ".webp"}
+TITLE_MAX = 20          # xhs.py 硬失败线，与 CLI 一致
+BODY_MAX = 1000         # CLI 只是警告，所以这里也只算 warn
+SLOT_LEAD_MIN = 30      # 定时发布要晚于当前时间 30 分钟以上
+SLOT_MATCH_H = 6        # 与 build_schedule 同口径：6 小时内算同一个档位
 WEEKDAY_CN = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
 
 PLAN_TEMPLATE = {
@@ -46,6 +53,7 @@ PLAN_TEMPLATE = {
     ],
     "targets": dict(DEFAULT_TARGETS),
     "paused": False,
+    "publish_policy": "confirm",
 }
 
 TOPICS_TEMPLATE = """# 选题池
@@ -176,6 +184,51 @@ def parse_post_time(text: str | None) -> datetime | None:
         except ValueError:
             continue
     return None
+
+
+def find_render_cards() -> Path | None:
+    """找 rednote-post 的实测脚本；找不到就不能给版式背书。"""
+    here = Path(__file__).resolve()
+    cands = []
+    if len(here.parents) > 2:
+        cands.append(here.parents[2] / "rednote-post" / "scripts" / "render_cards.py")
+    codex_home = Path(os.environ.get("CODEX_HOME") or (Path.home() / ".codex"))
+    cands.append(codex_home / "skills" / "rednote-post" / "scripts" / "render_cards.py")
+    cands.append(Path.home() / ".codex" / "skills" / "rednote-post" / "scripts" / "render_cards.py")
+    cands.append(Path.home() / ".agents" / "skills" / "rednote-post" / "scripts" / "render_cards.py")
+    for c in cands:
+        if c.is_file():
+            return c
+    return None
+
+
+def next_free_slot(now: datetime, weeks: int, weekdays: list[int],
+                   slots_txt: list[str], scheduled: list[dict]):
+    """计划时段里第一个没被平台定时占用的空档。"""
+    occupied = [t for t in (parse_post_time(s.get("time")) for s in scheduled)
+                if t is not None]
+    for dt in iter_slots(now + timedelta(minutes=SLOT_LEAD_MIN),
+                         weeks, weekdays, slots_txt):
+        if any(abs((dt - t).total_seconds()) <= SLOT_MATCH_H * 3600 for t in occupied):
+            continue
+        return dt
+    return None
+
+
+def run_render_check(post_dir: Path, script: Path | None) -> tuple[bool, str]:
+    """跑一遍 rednote-post 的实测；只有它全绿才算版式过关。"""
+    if script is None:
+        return False, "找不到 rednote-post/scripts/render_cards.py，版式没验过"
+    import subprocess
+    try:
+        proc = subprocess.run([sys.executable, str(script), str(post_dir)],
+                              capture_output=True, text=True, timeout=600)
+    except (OSError, subprocess.TimeoutExpired) as e:
+        return False, f"实测跑不起来：{e}"
+    if proc.returncode == 0:
+        return True, "全部通过"
+    bad = [ln.strip() for ln in proc.stdout.splitlines() if "不通过" in ln or "✗" in ln]
+    return False, "；".join(bad[:4]) or "有卡片未通过，看 render_cards.py 的输出"
 
 
 def build_schedule(slots: list[datetime], scheduled: list[dict],
@@ -372,6 +425,97 @@ def render_text(rep: dict) -> str:
     return "\n".join(L)
 
 
+def cmd_ready(args) -> int:
+    """发布就绪检查：全绿才让本 skill 自作主张发布，任一条不过就回去问用户。"""
+    ws = workspace(args.workspace)
+    plan = load_json(ws / "plan.json")
+    if plan is None:
+        die(f"没找到 {ws / 'plan.json'}。先跑：python3 plan.py init --workspace {ws}")
+
+    checks: list[dict] = []
+    warns: list[str] = []
+
+    def add(name: str, ok: bool, detail: str = ""):
+        checks.append({"name": name, "ok": bool(ok), "detail": detail})
+
+    policy = str(plan.get("publish_policy") or "confirm").strip().lower()
+    paused = bool(plan.get("paused"))
+    add("计划未停更", not paused, "plan.json 的 paused=true" if paused else "")
+    add("已授权自动发布", policy == "auto",
+        "" if policy == "auto" else f'publish_policy={policy}，要自动发布得改成 "auto"')
+
+    post: Path | None = None
+    if args.post:
+        post = Path(args.post).expanduser().resolve()
+        add("post 目录存在", post.is_dir(), str(post))
+    else:
+        ready, _ = classify_posts(ws)
+        if len(ready) == 1:
+            post = ws / "posts" / ready[0]["name"]
+            add("成品唯一", True, f"posts/{ready[0]['name']}")
+        else:
+            add("成品唯一", False,
+                f"posts/ 下有 {len(ready)} 篇可直接发，得用 --post 指定发哪一篇")
+
+    tags_n = 0
+    if post is not None and post.is_dir():
+        title = (post / "title.txt").read_text(encoding="utf-8").strip() \
+            if (post / "title.txt").is_file() else ""
+        body = (post / "body.txt").read_text(encoding="utf-8").strip() \
+            if (post / "body.txt").is_file() else ""
+        images = [f for f in post.iterdir()
+                  if f.is_file() and f.suffix.lower() in IMAGE_EXT]
+        missing = [n for n, ok in (("manifest.json", (post / "manifest.json").is_file()),
+                                   ("标题", bool(title)), ("正文", bool(body)),
+                                   ("配图", bool(images))) if not ok]
+        add("交付物齐全", not missing, "缺 " + "、".join(missing) if missing else
+            f"{len(images)} 张图")
+        add(f"标题 ≤ {TITLE_MAX} 字", 0 < len(title) <= TITLE_MAX, f"{len(title)} 字")
+        if len(body) > BODY_MAX:
+            warns.append(f"正文 {len(body)} 字，超过 {BODY_MAX} 字上限（平台只警告不拦）")
+        lines = [l.strip() for l in body.splitlines() if l.strip()]
+        last = lines[-1] if lines else ""
+        tags = [t for t in last.split() if t.startswith("#")]
+        tags_n = len(tags)
+        add("末行是标签行", bool(tags) and len(" ".join(tags)) == len(last),
+            f"{tags_n} 个标签" if tags else "正文最后一行不是以 # 开头的标签")
+        ok, why = run_render_check(post, find_render_cards())
+        add("版式实测全绿", ok, why)
+
+    scheduled = ((load_json(Path(args.state).expanduser()) or {}) if args.state
+                 else {}).get("queue", {}).get("scheduled") or []
+    cad = plan.get("cadence") or {}
+    slot = next_free_slot(datetime.now(), args.weeks,
+                          cad.get("weekdays") or [2, 6],
+                          cad.get("slots") or ["20:00"], scheduled)
+    add("有空闲时段", slot is not None,
+        slot.strftime("%Y-%m-%d %H:%M") if slot else f"未来 {args.weeks} 周排满了")
+
+    passed = all(c["ok"] for c in checks)
+    rep = {"generated_at": f"{datetime.now():%Y-%m-%d %H:%M}", "workspace": str(ws),
+           "post": str(post) if post else None, "tags": tags_n,
+           "next_slot": slot.strftime("%Y-%m-%d %H:%M") if slot else None,
+           "ready": passed, "checks": checks, "warnings": warns}
+
+    if args.json:
+        print(json.dumps(rep, ensure_ascii=False, indent=1))
+    else:
+        print(f"# 发布就绪检查 {rep['generated_at']}")
+        print("")
+        for c in checks:
+            print(f"- [{'x' if c['ok'] else ' '}] {c['name']}"
+                  + (f" —— {c['detail']}" if c["detail"] else ""))
+        for w in warns:
+            print(f"- [x] (提醒) {w}")
+        print("")
+        if passed:
+            print(f"结论：**可自动发布**，下一个空档 {rep['next_slot']}。")
+        else:
+            bad = "、".join(c["name"] for c in checks if not c["ok"])
+            print(f"结论：**未通过，回到确认闸门**。没过：{bad}")
+    return 0 if passed else 1
+
+
 def cmd_report(args) -> int:
     ws = workspace(args.workspace)
     plan = load_json(ws / "plan.json")
@@ -463,6 +607,13 @@ def main() -> int:
     p = sub.add_parser("init", help="建 workspace 与 plan.json")
     p.add_argument("--workspace", default=None)
     p.set_defaults(fn=cmd_init)
+    p = sub.add_parser("ready", help="发布就绪检查：全绿才可自动发布")
+    p.add_argument("--workspace", default=None)
+    p.add_argument("--post", default=None, help="post 目录；不给则要求 posts/ 下只有一篇成品")
+    p.add_argument("--state", default=None, help="xhs_state.py 输出，用来避开已定时档位")
+    p.add_argument("--weeks", type=int, default=4)
+    p.add_argument("--json", action="store_true")
+    p.set_defaults(fn=cmd_ready)
     p = sub.add_parser("report", help="出排期与缺口报告")
     p.add_argument("--workspace", default=None)
     p.add_argument("--state", default=None, help="xhs_state.py 输出的 JSON")

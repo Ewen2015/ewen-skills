@@ -29,7 +29,8 @@
     {"name": "思维模型", "share": 0.4}
   ],
   "targets": {"ready_weeks": 2, "semi_weeks": 4, "topic_weeks": 6},
-  "paused": false
+  "paused": false,
+  "publish_policy": "confirm"
 }
 ```
 
@@ -41,6 +42,7 @@
 | `pillars` | 栏目与配比。只在写文案时做参照，排期计算不强制 |
 | `targets.*_weeks` | 三档缓冲的目标周数，理由见下 |
 | `paused` | 停更期。为 `true` 时报告不该再报"空档" |
+| `publish_policy` | `"auto"` 或 `"confirm"`。`auto` 时 `plan.py ready` 全绿即可直接发布，不再问用户；缺失按 `confirm` 处理。见「发布授权」 |
 
 ## 频率怎么选
 
@@ -81,5 +83,25 @@
 `posts/<name>/` 同时满足三条才算"可直接发"：`title.txt` 非空、`body.txt` 非空、
 目录下有至少一张 `.png/.jpg/.jpeg/.webp`。缺哪条就在 `missing` 里列出来。
 
-这是**有意从宽**的判据：脚本不重跑 `render_cards.py`，所以"过了实测"这件事它验不了。
-真要发之前，排版仍然按 `rednote-post` 的流程实测一遍。
+这是**有意从宽**的判据：`report` 不重跑 `render_cards.py`，所以"过了实测"这件事它不验，
+只用来算库存。要动真格发布时走 `plan.py ready`——那一条会真的跑一遍实测。
+
+## 发布授权与就绪检查
+
+`publish_policy` 决定本 skill 能不能自己拍板发布：
+
+| 取值 | 行为 |
+| --- | --- |
+| `"auto"` | `plan.py ready` 全绿 → 直接发布，不再回头确认。授权只覆盖"发不发、发哪一档" |
+| `"confirm"` 或缺失 | 每次都回到 `rednote-post` 的确认闸门，把标题/正文/图片摆给用户看完再发 |
+
+```bash
+python3 plan.py ready --workspace W --post <post-dir> [--state F] [--json]
+```
+
+退出码 `0` 全绿，`1` 有不过的项。它验八条：计划未停更、已授权、成品唯一、交付物齐全、
+标题 ≤ 20 字、正文末行是标签行、`render_cards.py` 全绿、有空闲时段。正文超过 1000 字
+只算提醒（平台本身也只警告）。
+
+它**不验平台回读**——那是 `fill` 之后 `verify` 的事。`ready` 全绿 + `verify` 一致，
+两条都过才允许自动发布。任一条不过都得停下来问用户。
