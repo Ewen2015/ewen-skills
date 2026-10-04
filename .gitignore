@@ -1,3 +1,7 @@
 __pycache__/
 *.pyc
 .DS_Store
+
+# 读书工作区：里面有从 EPUB 抽出的全书正文，不能推到公开仓库
+docs/creative-act/
+docs/naval/
