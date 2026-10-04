@@ -6,8 +6,8 @@ The most important skills Ewen found for his personal AI agent.
 
 | Skill | 用途 |
 | --- | --- |
-| [`read-a-book`](./read-a-book) | 用《如何阅读一本书》的方法读一本书：检视阅读 → 分析阅读 → 主题阅读，梳理背景脉络与影响，产出结构化读书笔记。 |
-| [`scandinavian-style`](./scandinavian-style) | 斯堪的纳维亚风格的设计系统：16:9 版式网格、字号层级、页脚规范、配色与图表规则，附可直接改的单页 HTML 模板。不带任何品牌资产。 |
+| [`read-a-book`](./read-a-book) | 用《如何阅读一本书》的方法读一本书：检视阅读 → 分析阅读 → 主题阅读，梳理背景脉络与影响，产出结构化读书笔记；可按需压成**一页纸（one-pager）**。 |
+| [`scandinavian-style`](./scandinavian-style) | 斯堪的纳维亚风格的设计系统：16:9 版式网格、字号层级、页脚规范、配色与图表规则，附可直接改的单页 HTML 模板，以及**密集单页（one-pager）**三栏模式与实测校验脚本。不带任何品牌资产。 |
 
 ## 安装
 

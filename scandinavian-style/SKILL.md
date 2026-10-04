@@ -28,13 +28,14 @@ metadata:
 
 ## 先判断产物类型
 
-三类产物共用同一套设计语言，但落地方式不同：
+四类产物共用同一套设计语言，但落地方式不同：
 
 | 产物 | 做法 |
 | --- | --- |
 | PPT / 幻灯片 | 按下面的版式网格定位，尺寸 33.867 × 19.05 cm（16:9 宽屏） |
 | 单页 HTML / 报告页 | 用 [`assets/slide.html`](assets/slide.html) 起步，读 [`references/web-artifacts.md`](references/web-artifacts.md) |
 | 数据密集页面 | 先读本页的可视化部分，再读 [`references/dataviz-guide.md`](references/dataviz-guide.md) |
+| 密集单页 / one-pager | 用户要求把整个主题压进一页时。用 [`assets/one-pager.html`](assets/one-pager.html) 起步，读 [`references/one-pager.md`](references/one-pager.md) |
 
 ## 版式网格
 
@@ -82,6 +83,21 @@ metadata:
 - 层级靠**字号、间距、位置**建立，不靠颜色。
 - 正文行宽控制在 65–75 字符；中文每行 30–40 字。
 - 除链接外不用下划线；避免通篇大写。
+
+## 密集单页（one-pager）
+
+默认规则是**放不下就拆页，不要缩字号**。唯一的例外：用户明确要「一页纸／one-pager／保证内容都在
+里面」，或抱怨「篇幅太长了」而内容本身不该砍。
+
+此时切到密集单页模式——三栏（纵向细线 11.458 / 22.441 cm）、内容带扩到 4.40 → 17.00 cm、
+正文降到 8.5pt（四档：10 / 9 / 8.5 / 7.6pt），三栏用 `space-between` 收尾齐平。
+
+**不参与降级的东西**：标题仍 32pt、页脚仍 9pt、上下分割线仍 1.55 / 17.50 cm 全出血 0.25pt、
+页脚四元素仍齐全。密度只从字号和分栏里省，不许动骨架。
+
+完整坐标、必备构件、比例数据条写法，以及**实测栏富余的校验脚本**见
+[`references/one-pager.md`](references/one-pager.md)。密集页容错只有几毫米，而 `overflow:hidden`
+会静默裁掉溢出——**交付前必须跑校验，不能靠肉眼**。
 
 ## 页脚规范
 
@@ -181,6 +197,10 @@ metadata:
 直接用 [`assets/slide.html`](assets/slide.html)：一份可运行的单页 16:9 模板，已实现全部网格坐标、
 页脚四元素、亮暗主题和打印尺寸。改内容即可，不要重写版式。
 
+用户要一页纸时改用 [`assets/one-pager.html`](assets/one-pager.html)：三栏密集模板，已实现密集模式的
+全部坐标、字号下限、比例数据条与出处注。它只是版式的起点——占位内容很短，实测富余约 8 cm，
+填到 0.5–2.5 cm 才是真实密度。
+
 [`references/web-artifacts.md`](references/web-artifacts.md) 解释了模板里那个随容器缩放的坐标写法、
 如何导出成一页 PDF，以及怎么验证渲染结果——版式脆，交付前必须验证。
 
@@ -201,5 +221,8 @@ metadata:
 - [ ] 图表只在增加洞察时使用，简洁、有目的、可访问
 - [ ] 颜色不是唯一的信息载体
 - [ ] 所有视觉噪音已移除
+
+若这一页是密集单页（one-pager），另见 [`references/one-pager.md`](references/one-pager.md)
+的专属清单——重点是三栏坐标、正文不小于 8.5pt、每栏富余 ≥ 0.5 cm，且必须是**实测**的。
 
 任何一项不过 → **简化设计**。
