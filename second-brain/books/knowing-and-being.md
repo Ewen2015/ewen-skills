@@ -5,10 +5,10 @@ original_title: Knowing and Being: Essays by Michael Polanyi
 author: 迈克尔·波兰尼
 author_en: Michael Polanyi
 editor: 马乔里·格勒内（Marjorie Grene）
-translator: （中文版译者未核对）
-publisher: （中文版出版社未核对）
+translator: 李白鹤
+publisher: 南京大学出版社
 year: 1969
-edition_note: 英文原版 1969，收 13 篇 1959–1968 的论文；本笔记据中文版扫描 PDF（256 页，OCR）读，中文版出版信息未核对
+edition_note: 中文版 2017-07 第 1 版，ISBN 978-7-305-16916-8，当代学术棱镜译丛（张一兵主编）；英文原版 University of Chicago Press 1969，收 13 篇 1959–1968 的论文。笔记据中文版扫描 PDF（256 页，OCR）读。
 source_type: 一手
 source_warning: 一手著作，但本笔记基于机器 OCR，个别字词可能有误；"下游影响"数条来自英文维基百科，未与原书核对。
 read_at: 2026-10-02

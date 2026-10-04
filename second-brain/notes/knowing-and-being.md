@@ -1,9 +1,9 @@
 # 《认知与存在：迈克尔·波兰尼文集》 —— 阅读笔记
 
-**迈克尔·波兰尼（Michael Polanyi）｜马乔里·格勒内（Marjorie Grene）编**
-原著 *Knowing and Being: Essays by Michael Polanyi*（1969，共 13 篇，写于 1959–1968）。
-版本：扫描版 PDF，无文字层；本次用 Vision 全本 OCR（256 页）后阅读。引文页码为中文版页码；正文页边保留英文原版页码（边码），书末索引按边码编排。
-来源：2026-10-02 的 read-a-book 会话产出。中文版出版社与译者**未核对**。
+**［英］迈克尔·波兰尼（Michael Polanyi）著｜［美］马乔里·格勒内（Marjorie Grene）编｜李白鹤 译｜南京大学出版社，2017 年 7 月｜ISBN 978-7-305-16916-8｜当代学术棱镜译丛（张一兵 主编）**
+原著 *Knowing and Being: Essays by Michael Polanyi*（University of Chicago Press，1969，共 13 篇，写于 1959–1968）。
+版本：中文版扫描 PDF（16.5 印张，225 千字），无文字层；本次用 Vision 全本 OCR（256 页）后阅读。引文页码为中文版页码；正文页边保留英文原版页码（边码），书末索引按边码编排。
+来源：2026-10-02 的 read-a-book 会话产出；书目信息取自版权页（CIP）。
 
 ---
 
