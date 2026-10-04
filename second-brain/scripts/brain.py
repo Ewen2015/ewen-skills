@@ -330,8 +330,7 @@ def cmd_check(_args) -> int:
         if notes:
             np = Path(str(notes)).expanduser()
             if not (np if np.is_absolute() else SKILL_DIR / np).exists():
-                # 原笔记在 .gitignore 里，换台机器就是没有——这是预期，只提醒。
-                warns.append(f"{name}: 找不到原笔记 {notes}（本地笔记未入库，正常）")
+                warns.append(f"{name}: 找不到原笔记 {notes}（路径不对，检查 notes: 字段）")
 
     if INDEX.exists():
         if INDEX.read_text(encoding="utf-8") != render_index(cards):
@@ -386,7 +385,7 @@ def cmd_add(args) -> int:
         print(f"提示：一句话主旨有 {len(thesis)} 字，填进卡片时压短一点", file=sys.stderr)
     keywords = grab("keywords")
     unresolved = grab("unresolved")
-    # 原笔记收进 skill 自己的 notes/，docs/ 只放 repo 级别的东西。
+    # 原笔记收进 skill 自己的 notes/。
     notes_dir = SKILL_DIR / "notes"
     notes_dir.mkdir(parents=True, exist_ok=True)
     dest_note = notes_dir / f"{slug}.md"

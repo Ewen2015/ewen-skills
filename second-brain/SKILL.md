@@ -19,7 +19,7 @@ metadata:
 second-brain/
 |-- index.md           书脊：每本 4 行。唯一常读的文件，**是生成物，别手改**
 |-- books/<slug>.md    每本一张卡，只读选中的那几张
-|-- notes/<slug>.md    read-a-book 的原笔记，深度层（不入库，见下）
+|-- notes/<slug>.md    read-a-book 的原笔记，深度层（只在深读/核对时读）
 `-- scripts/brain.py   recall / index / check / add
 ```
 
@@ -100,8 +100,8 @@ python3 scripts/brain.py index     # 重生成 index.md
 python3 scripts/brain.py check     # 体检
 ```
 
-**`notes/` 不入库**（`.gitignore` 里排除了）：原笔记含大量原书引文，而卡片是可引用的提炼。
-代价是原笔记只有本地一份，换机器要重新从 `read-a-book` 生成。
+**`notes/` 与 `books/` 一起入库**：原笔记含较多原书引文，属于深度层；卡片是可引用的提炼，
+两者都进仓库，换机器不用重新生成。
 
 `triggers` 是检索接口，**要用用户会说的话写**，不是章节标题。
 index 只印前 16 条，把最可能被问到的说法放前面。写法和字段口径见

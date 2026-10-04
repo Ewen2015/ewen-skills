@@ -20,7 +20,7 @@ edition_note: 中文版 2022-04，ISBN 978-7-5217-4112-4；英文原著 2020
 source_type: 二手汇编          # 必填：一手 / 二手汇编 / 一手（署名作者）…
 source_warning: 全书由推文／播客／访谈整理……   # source_type 不是"一手"时必填
 read_at: 2026-10-05           # 必填，读完的日期
-notes: notes/naval-almanack.md # 原笔记路径，相对 skill 目录（原笔记不入库，缺失只提醒）
+notes: notes/naval-almanack.md # 原笔记路径，相对 skill 目录（缺失只提醒）
 domains: [财富, 幸福, 判断力]    # 必填，宽泛的领域词
 thesis: 财富是睡觉时仍在为你赚钱的资产……  # 必填，一句话立场
 triggers: [用时间换钱, 时薪, 要不要创业]   # 必填，检索入口
