@@ -17,9 +17,10 @@ metadata:
 
 ```
 second-brain/
-|-- index.md          书脊：每本 4 行。唯一常读的文件，**是生成物，别手改**
-|-- books/<slug>.md   每本一张卡，只读选中的那几张
-`-- scripts/brain.py  recall / index / check / add
+|-- index.md           书脊：每本 4 行。唯一常读的文件，**是生成物，别手改**
+|-- books/<slug>.md    每本一张卡，只读选中的那几张
+|-- notes/<slug>.md    read-a-book 的原笔记，深度层（不入库，见下）
+`-- scripts/brain.py   recall / index / check / add
 ```
 
 书不是 skill，是**文件**。真正做成独立 skill 会让每本书的描述常驻上下文——
@@ -67,7 +68,7 @@ second-brain/
 | `SKILL.md` | 命中 skill 时 | ~1.6K tokens |
 | `index.md` | 挑书时 | **每本 ~190 tokens** |
 | `books/<slug>.md` | **只读选中的 1–2 张** | 每张 ~1.4–1.7K |
-| `docs/<book>/notes.md` 原笔记 | 只在用户要深读或核对时 | 每本 ~6–10K |
+| `notes/<slug>.md` 原笔记 | 只在用户要深读或核对时 | 每本 ~6–10K |
 
 一次问答 ≈ 3–5K tokens（读 1–2 张卡）。**不许把 `books/` 整个读完**——那等于把预算
 花在不相干的书上，40 本要 60K 以上。
@@ -92,11 +93,15 @@ second-brain/
 读完一本新书后：
 
 ```bash
-python3 scripts/brain.py add --notes <repo>/docs/<book>/notes.md --slug <slug>
+python3 scripts/brain.py add --notes <笔记文件路径> --slug <slug>
+# 它会把笔记收进 notes/，并生成一张卡片骨架
 # 按 references/cards.md 填完卡片，删掉末尾「待处理」整段
 python3 scripts/brain.py index     # 重生成 index.md
 python3 scripts/brain.py check     # 体检
 ```
+
+**`notes/` 不入库**（`.gitignore` 里排除了）：原笔记含大量原书引文，而卡片是可引用的提炼。
+代价是原笔记只有本地一份，换机器要重新从 `read-a-book` 生成。
 
 `triggers` 是检索接口，**要用用户会说的话写**，不是章节标题。
 index 只印前 16 条，把最可能被问到的说法放前面。写法和字段口径见

@@ -2,6 +2,6 @@ __pycache__/
 *.pyc
 .DS_Store
 
-# 读书工作区：里面有从 EPUB 抽出的全书正文，不能推到公开仓库
-docs/creative-act/
-docs/naval/
+# 第二大脑的深度层：read-a-book 的原笔记，含大量原书引文，不入库。
+# 卡片（second-brain/books/）是可引用的提炼，那些入库。
+second-brain/notes/

@@ -20,6 +20,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import shutil
 import sys
 from pathlib import Path
 
@@ -385,7 +386,13 @@ def cmd_add(args) -> int:
         print(f"提示：一句话主旨有 {len(thesis)} 字，填进卡片时压短一点", file=sys.stderr)
     keywords = grab("keywords")
     unresolved = grab("unresolved")
-    rel_notes = Path("..") / "docs" / src.parent.name / src.name
+    # 原笔记收进 skill 自己的 notes/，docs/ 只放 repo 级别的东西。
+    notes_dir = SKILL_DIR / "notes"
+    notes_dir.mkdir(parents=True, exist_ok=True)
+    dest_note = notes_dir / f"{slug}.md"
+    if src != dest_note:
+        shutil.copy2(src, dest_note)
+    rel_notes = Path("notes") / dest_note.name
 
     scaffold = f"""---
 slug: {slug}
@@ -442,6 +449,7 @@ confidence:
 """
     out.write_text(scaffold, encoding="utf-8")
     print(f"已生成 {out}")
+    print(f"原笔记已收进 {dest_note}")
     print("接下来要手填：author / source_type / domains / triggers / 六节正文，"
           "然后把「待处理」整段删掉。")
     return 0

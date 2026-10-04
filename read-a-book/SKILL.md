@@ -143,7 +143,7 @@ metadata:
 python3 <second-brain>/scripts/brain.py add --notes <这份笔记的路径> --slug <slug>
 ```
 
-它会生成一张可检索的卡片骨架，正文六节由人从上面的「内·正文 / 评·判断」里提炼。
+它会把这份笔记收进那个 skill 的 `notes/`，并生成一张可检索的卡片骨架；正文六节由人从上面的「内·正文 / 评·判断」里提炼。
 **触发词要用用户会说的话写，不是章节标题**——卡片写法的口径在那个 skill 的
 `references/cards.md`。
 

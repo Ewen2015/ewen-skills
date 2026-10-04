@@ -20,7 +20,7 @@ edition_note: 中文版 2022-04，ISBN 978-7-5217-4112-4；英文原著 2020
 source_type: 二手汇编          # 必填：一手 / 二手汇编 / 一手（署名作者）…
 source_warning: 全书由推文／播客／访谈整理……   # source_type 不是"一手"时必填
 read_at: 2026-10-05           # 必填，读完的日期
-notes: ../docs/naval/notes.md # 原笔记路径，相对 skill 目录（原笔记不入库，缺失只提醒）
+notes: notes/naval-almanack.md # 原笔记路径，相对 skill 目录（原笔记不入库，缺失只提醒）
 domains: [财富, 幸福, 判断力]    # 必填，宽泛的领域词
 thesis: 财富是睡觉时仍在为你赚钱的资产……  # 必填，一句话立场
 triggers: [用时间换钱, 时薪, 要不要创业]   # 必填，检索入口
@@ -72,11 +72,12 @@ aliases: [纳瓦尔, Naval]       # 别名/外文名/俗称
 `read-a-book` 的输出结构是固定的（外·脉络／内·正文／评·判断），可以直接映射：
 
 ```bash
-python3 scripts/brain.py add --notes <repo>/docs/<book>/notes.md --slug <slug>
+python3 scripts/brain.py add --notes <某本书的 notes.md 路径> --slug <slug>
 ```
 
-脚本会把机械的部分填好（书名、书目行、一句话主旨、关键词表、未解决之处），
-并在末尾留一段「待处理」原料。然后：
+脚本会把原笔记复制进 `notes/<slug>.md`，把机械的部分填好（书名、书目行、一句话主旨、
+关键词表、未解决之处），并在末尾留一段「待处理」原料。笔记来源不限——`read-a-book`
+的产物最省事，因为它的章节结构是固定的；别的来源也能用，手工填的会多一些。然后：
 
 1. 按上面的表填六节正文——**这一步是判断，脚本做不了**；
 2. `domains` / `triggers` 主要从「关键词表」和「未解决之处」来，但要用口语重写；
