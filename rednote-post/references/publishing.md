@@ -1,0 +1,212 @@
+# 发布环境
+
+## 它怎么工作
+
+不去驱动一个全新的无头浏览器——**借用用户自己已登录的 Chrome**：
+
+```
+scripts/xhs.py  ──WebSocket:9333──▶  bridge_server  ──▶  Chrome 扩展  ──▶  当前标签页
+```
+
+扩展是 `autoclaw-cc/xiaohongshu-skills` 提供的（仓库里叫 `XHS Bridge`）。好处是登录态、
+验证码、风控指纹都是真人浏览器，不需要处理扫码和 cookie 导出。
+
+**代价是：扩展作用在"当前活动标签页"上。** 用户切走标签页，命令就会打到别的页面上。
+跑之前先确认 Chrome 开着且停在发布页。
+
+## 一次性配置
+
+```bash
+bash <skill>/scripts/setup_bridge.sh
+```
+
+它会克隆仓库、建 venv、装依赖，并按下面的坑固定 `websockets` 版本。装完还需要手动做两件事：
+
+1. `chrome://extensions` → 打开开发者模式 → 加载已解压的扩展 → 选仓库里的扩展目录；
+2. 在 Chrome 里登录小红书创作服务平台。
+
+### 唯一的硬坑：websockets 版本
+
+**必须锁 `websockets==13.1`。** 更高的版本（16.x）握手协议不兼容——服务端日志显示
+"Extension 已连接"，但 CLI 侧必定拿到 `InvalidMessage`。这个错看起来像扩展没装好，
+其实是版本问题，会浪费很久。
+
+`setup_bridge.sh` 里已经固定，别随手升级。
+
+## 目录与状态
+
+默认路径 `/tmp/xhs-skills-repo`，可用环境变量覆盖：
+
+```bash
+export XHS_SKILLS_DIR=~/code/xiaohongshu-skills
+```
+
+**`/tmp` 会被系统清理。** 依赖长期使用就把仓库放到持久目录。
+
+## 桥接的两种用法
+
+**CLI**（表单填写、发布这类标准动作）：
+
+```bash
+.venv/bin/python scripts/cli.py fill-publish --title-file T --content-file B --images 1.jpg 2.jpg ...
+.venv/bin/python scripts/cli.py click-publish
+```
+
+**`BridgePage`**（自定义步骤：回读页面、点合集下拉等），`<skill>/scripts/xhs.py` 用的就是这条：
+
+```python
+import sys; sys.path.insert(0, f"{REPO}/scripts")
+from xhs.bridge import BridgePage
+p = BridgePage("ws://localhost:9333")
+p.navigate(url); p.evaluate("..."); p.click_element(sel)
+```
+
+注意 CLI 每条命令会**自己拉起又关掉**一个 bridge。要用 `BridgePage` 就得另起一个常驻的：
+
+```bash
+nohup .venv/bin/python scripts/bridge_server.py > /tmp/xhs-bridge.log 2>&1 &
+```
+
+## 页面事实（会随小红书改版失效，用前先验）
+
+| 东西 | 选择器 / 事实 |
+| --- | --- |
+| 发布页 | `creator.xiaohongshu.com/publish/publish?source=official&target=image` |
+| 标题框 | `div.d-input input` |
+| **正文编辑器** | **`[role='textbox']`（tiptap/ProseMirror）** |
+| 图片预览 | `.img-preview-area .pr` |
+| 发布按钮 | `.publish-page-publish-btn button.bg-red` |
+| 合集按钮 | `.collection-plugin-button` → 选项 `.item-label` |
+| 笔记管理 | `creator.xiaohongshu.com/new/note-manager` |
+
+### 正文编辑器已经换了
+
+老版本是 Quill，选择器 `div.ql-editor`。**现在这个元素不存在了**，编辑器是
+tiptap/ProseMirror，要认 `[role='textbox']`（或找 `data-placeholder` 含"输入正文描述"
+的 `p` 的 textbox 祖先）。
+
+用旧选择器时 `has_element` 返回 false，而正文**其实填进去了**——会产生
+"正文长度 0"的假阴性。回读必须用：
+
+```js
+document.querySelector('[role=textbox]').innerText.length
+```
+
+### 上限
+
+标题 ≤ 20 字 · 正文 ≤ 1000 字 · 图片 ≤ 18 张。CLI 会自己检查标题和正文长度并报错。
+
+### 表单是富交互组件
+
+这些是自定义组件，不是原生表单元素。用 `.click()` 常常没反应；
+要按顺序派发完整事件序列：
+
+```js
+['pointerdown','mousedown','pointerup','mouseup','click'].forEach(t =>
+  el.dispatchEvent(new MouseEvent(t, {bubbles:true, cancelable:true, clientX:x, clientY:y})));
+```
+
+反过来，原生 `<input>` 用 `input` + `change` 事件就够了。
+
+### 话题标签必须用「真点击」——这是最容易踩的坑
+
+正文末尾那行 `#意会认知 #波兰尼 #读书` 不会自动变成话题。小红书要求每个标签都从
+**联想下拉**里选一次，而下拉项的选中逻辑**只认真实鼠标事件**（`event.isTrusted === true`）：
+
+| 点击方式 | 结果 |
+| --- | --- |
+| `el.click()` | ✗ 标签留在编辑器里当成普通文字 |
+| 合成 `pointerdown/mousedown/…/click` 序列 | ✗ 同上 |
+| **CDP `Input.dispatchMouseEvent`（真点击）** | ✓ 变成 `.tiptap-topic` 话题 |
+
+上游 CLI 的 `_input_single_tag` 用的是第一种，所以它 **log 说"点击标签联想"其实没生效**。
+症状很有迷惑性：所有标签被当成一整串文字，**只有最后一个**因为后面紧跟换行才被识别成话题。
+
+还有两个连带事实：
+
+* 下拉列表是 tippy 弹层，列表节点 id 是 `#creator-editor-topic-container`。
+  **它关着的时候也留在 DOM 里**，停靠在页面左上角（压着左侧边栏）、里面是默认热榜
+  （第一条永远是 `#读书128亿浏览`）——所以「找得到 `.item`」不等于「下拉是打开的」。
+  判据要用 `document.elementFromPoint(中心点)` 确认那个坐标下真的就是下拉项。
+* 桥接里只有 `click_element_by_text` / `click_nth_element` 走 CDP 真点击；
+  `click_element` 是合成 JS 点击。**标签一律用前者。**
+
+`scripts/xhs.py` 的处理方式：把正文末尾的标签行从交给 CLI 的正文里摘掉（CLI 看不见
+`#` 就不会去点它那个坏路径），再自己用真点击逐个提交，最后数
+`[role=textbox] .tiptap-topic` 的个数对不对。提交不上时补一个空格，避免它跟下一个标签粘成一片。
+
+单独重跑（不用重新填表）：
+
+```bash
+<skill>/scripts/xhs.py tags --dir <post-dir>          # 读 body 末尾的标签行
+<skill>/scripts/xhs.py tags --dir <post-dir> --tags 意会认知 波兰尼
+```
+
+### 标签就是上不去的时候
+
+观察到的坏状态长这样：编辑器里 `#标签` 的联想是打开的、列表里也有正确的候选，
+CDP 真点击也确实发出去了，但**点了不生效**——话题数不变，`#标签` 留成普通文字。
+另一种是列表**卡在上一次查询的结果**上（比如一直显示 `#意会认知0浏览`），
+等多久都不刷新。这两种都不是选择器问题，重试也救不回来。
+
+`xhs.py` 的处理：每个标签最多重试 2 轮（失败时用浏览器的删除命令原地擦掉再重打，
+全程不碰 focus／选区，避免把联想组件带歪）；**连续 2 个标签失败就停手**，
+不再空转、也不继续打接口。剩下的标签留在编辑器里可见。
+
+**这时不要发布。** 先 `xhs.py reset` 重新导航（必要时重启 Chrome 或换个时间再试），
+再走一遍 `fill`。哪怕真上不去，`verify` 也会用话题数把问题挡在发布前。
+
+## 回读核验（必做）
+
+`fill` 返回的 success 只代表流程跑完，**不代表页面真的对了**。回读这四项并与本地比对：
+
+| 项 | 读法 |
+| --- | --- |
+| 标题 | `document.querySelector('div.d-input input').value` |
+| 正文 | `document.querySelector('[role=textbox]').innerText.length` |
+| 图片 | `document.querySelectorAll('.img-preview-area .pr').length` |
+| **话题** | `document.querySelectorAll('[role=textbox] .tiptap-topic').length` |
+| 合集 | `.collection-plugin-wrapper` 的 innerText 里是否出现合集名 |
+
+`scripts/xhs.py verify` 做的就是这些。
+
+## 发布后的模糊结果
+
+`click-publish` 经常打印"15s 内未捕获到任何发布反馈"却仍返回 success。**这是正常的**——
+小红书的发布请求不一定走 XHR，toast 也可能一闪而过。
+
+判定以**页面状态**为准：
+
+- URL 出现 `published=true` ✅
+- 表单被清空（图片 0、标题空）✅
+- 两者同时成立 = 已提交
+
+然后再去 `new/note-manager` 看**已发布**列表里有没有它、**审核中**里有没有它。
+
+## 给用户看截图（macOS）
+
+扩展自带的 `screenshot_element` 需要 `<all_urls>` 或 `activeTab` 权限，通常会报
+`Either the '<all_urls>' or 'activeTab' permission is required`。别在这上面纠缠，
+直接用系统截图：
+
+```bash
+open -a "Google Chrome"; sleep 1.5
+[ "$(osascript -e 'tell application "System Events" to get name of first application process whose frontmost is true')" = "Google Chrome" ] \
+  && screencapture -x /tmp/shot.png
+```
+
+**必须验证 frontmost 再截。** Codex/ChatGPT 窗口会抢焦点，`osascript ... activate`
+单独用时经常截到错误的窗口。所以要循环重试直到 frontmost 真的是 Chrome。
+
+## 故障排查
+
+| 症状 | 原因 |
+| --- | --- |
+| `InvalidMessage` | `websockets` 版本不是 13.1 |
+| "浏览器扩展未连接" | 扩展没启用 / Chrome 没开 / 端口被占 |
+| 命令打到别的页面 | Chrome 的活动标签页不是发布页 |
+| 正文长度读出来是 0 | 用了失效的 `div.ql-editor`；改 `[role=textbox]` |
+| 图片数量翻倍 | 没有重新导航到干净发布页就重复 `fill` |
+| 点击没反应 | 富交互组件；需要完整鼠标事件序列 |
+| 只有最后一个 `#标签` 生效 | 上游 CLI 用合成点击选话题；改用 CDP 真点击（`xhs.py` 已内置） |
+| 标签数量对不上 | 数 `[role=textbox] .tiptap-topic`；不是看正文里的 `#` |

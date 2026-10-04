@@ -1,0 +1,637 @@
+#!/usr/bin/env python3
+"""Drive 小红书 (RedNote) publishing through the browser-extension bridge.
+
+Prerequisites (see references/publishing.md):
+  * a checkout of autoclaw-cc/xiaohongshu-skills, path in XHS_SKILLS_DIR
+  * its venv deps installed, with websockets pinned to 13.1
+  * the XHS Bridge Chrome extension loaded and enabled, logged in
+
+Subcommands:
+  status                      bridge + extension + login state
+  reset                       open a clean publish page (clears any previous fill)
+  fill     --dir D            upload images + title + body from the post dir
+  tags     --dir D            (re)commit the topic tags from the body's last line
+  collection NAME             attach the note to a 合集
+  verify   [--dir D]          read the form back and compare against local files
+  publish                     click 发布
+  check-published TITLE       confirm it landed in 已发布 on the note manager
+  shot     [--out PATH]       screenshot Chrome (for showing the user)
+
+Exit codes: 0 ok, 1 failed check, 2 environment/permission problem.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import re
+import subprocess
+import sys
+import tempfile
+import time
+from pathlib import Path
+
+SKILLS_DIR = Path(os.environ.get("XHS_SKILLS_DIR", "/tmp/xhs-skills-repo"))
+BRIDGE_URL = os.environ.get("XHS_BRIDGE_URL", "ws://localhost:9333")
+PUBLISH_URL = ("https://creator.xiaohongshu.com/publish/publish"
+               "?source=official&target=image")
+NOTE_MANAGER_URL = "https://creator.xiaohongshu.com/new/note-manager"
+
+TITLE_SEL = "div.d-input input"
+EDITOR_SEL = "[role='textbox']"
+PREVIEW_SEL = ".img-preview-area .pr"
+COLLECTION_BTN = ".collection-plugin-button"
+
+# The topic-suggestion popover is a tippy panel; its results list carries the id
+# `creator-editor-topic-container`. Its contents can be stale: it has been seen
+# holding the previous query's results (because the search silently failed), and
+# a parked instance with the default hot list sits at the page's top-left. So
+# neither "the node exists" nor "it has .item children" proves the list is good.
+TOPIC_BOX_SEL = "#creator-editor-topic-container"
+TOPIC_ITEM_SEL = f"{TOPIC_BOX_SEL} .item"
+TOPIC_COUNT_JS = ("document.querySelectorAll(\"[role='textbox'] .tiptap-topic\")"
+                  ".length")
+
+# Only click a topic when the item matches the query we just typed *and* its
+# on-screen centre is really the topmost element there -- the same hit-test a
+# real mouse click performs. That combination rejects stale and parked lists.
+TAG_FIND_JS = """(() => {
+  const q = %s;
+  const box = document.getElementById('creator-editor-topic-container');
+  if (!box) return null;
+  const items = [...box.querySelectorAll('.item')];
+  for (let i = 0; i < items.length; i++) {
+    const el = items[i];
+    if (!el.textContent.includes(q)) continue;
+    const r = el.getBoundingClientRect();
+    if (r.width <= 0 || r.height <= 0) continue;
+    const x = r.left + r.width / 2, y = r.top + r.height / 2;
+    if (x < 0 || y < 0 || x > innerWidth || y > innerHeight) continue;
+    const hit = document.elementFromPoint(x, y);
+    if (!hit || !(hit === el || el.contains(hit) || hit.contains(el))) continue;
+    return JSON.stringify({index: i, text: (el.textContent || '').trim()});
+  }
+  return null;
+})()"""
+
+# A trailing line of `#a #b #c` is how the body files carry the topics.
+TAG_LINE_RE = re.compile(r"^(?:#[^\s#]+\s*)+$")
+
+# Move the caret to the end of the body and open a fresh paragraph for the tags.
+INSERT_TAG_LINE_JS = """(() => {
+  const el = document.querySelector(%s);
+  if (!el) return 'no-editor';
+  el.focus();
+  const range = document.createRange();
+  range.selectNodeContents(el);
+  range.collapse(false);
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
+  document.execCommand('insertParagraph', false, null);
+  return 'ok';
+})()"""
+
+# Delete a `#tag` that never became a topic so it can be retyped. Uses the
+# browser's own delete command on the live caret -- deliberately no focus() or
+# selection writes, which are what desync the suggestion component.
+RETRACT_TAG_JS = """(() => {
+  const el = document.querySelector(%s);
+  if (!el) return 'no-editor';
+  const txt = (el.innerText || '').replace(/\\u00a0/g, ' ');
+  const want = %s;
+  if (!txt.replace(/\\s+$/, '').endsWith(want)) return 'not-tail';
+  for (let i = 0; i < %d; i++) document.execCommand('delete', false, null);
+  return 'deleted';
+})()"""
+
+
+def reexec_in_venv() -> None:
+    """The bridge needs `websockets`, which lives in the skills-repo venv.
+
+    Re-exec there so callers can just run `python3 scripts/xhs.py ...` with any
+    interpreter instead of having to remember which python to use.
+    """
+    if os.environ.get("_XHS_REEXEC"):
+        return
+    try:
+        import websockets  # noqa: F401
+        return
+    except ImportError:
+        pass
+    for candidate in (SKILLS_DIR / ".venv" / "bin" / "python",
+                      SKILLS_DIR / ".venv" / "Scripts" / "python.exe"):
+        if candidate.exists():
+            os.environ["_XHS_REEXEC"] = "1"
+            os.execv(str(candidate), [str(candidate), os.path.abspath(__file__), *sys.argv[1:]])
+
+
+reexec_in_venv()
+
+READBACK_JS = """JSON.stringify({
+  title: (document.querySelector(%s)||{}).value || '',
+  body: ((document.querySelector(%s)||{}).innerText || ''),
+  previews: document.querySelectorAll(%s).length,
+  topics: document.querySelectorAll("[role='textbox'] .tiptap-topic").length,
+  collection: (document.querySelector('.collection-plugin-wrapper')||{}).innerText || '',
+  url: location.href
+})""" % (json.dumps(TITLE_SEL), json.dumps(EDITOR_SEL),
+         json.dumps(PREVIEW_SEL))
+
+
+def die(msg: str, code: int = 2):
+    print(f"错误：{msg}", file=sys.stderr)
+    sys.exit(code)
+
+
+def bridge():
+    sys.path.insert(0, str(SKILLS_DIR / "scripts"))
+    try:
+        from xhs.bridge import BridgePage
+        from xhs.errors import CDPError
+    except ImportError as e:
+        die(f"无法从 {SKILLS_DIR} 导入 xhs 模块：{e}\n"
+            "先按 references/publishing.md 跑 scripts/setup_bridge.sh，"
+            "或用 XHS_SKILLS_DIR 指向仓库。")
+    return BridgePage(BRIDGE_URL), CDPError
+
+
+def ensure_server() -> None:
+    page, _ = bridge()
+    if page.is_server_running():
+        return
+    server = SKILLS_DIR / "scripts" / "bridge_server.py"
+    if not server.exists():
+        die(f"找不到 {server}；先跑 scripts/setup_bridge.sh")
+    print("启动 bridge server…")
+    venv = SKILLS_DIR / ".venv" / "bin" / "python"
+    python = str(venv) if venv.exists() else sys.executable
+    subprocess.Popen([python, str(server)],
+                     stdout=open("/tmp/xhs-bridge.log", "ab"),
+                     stderr=subprocess.STDOUT)
+    for _ in range(10):
+        time.sleep(1)
+        if page.is_server_running():
+            return
+    die("bridge server 起不来，见 /tmp/xhs-bridge.log")
+
+
+def cli(*args: str) -> subprocess.CompletedProcess:
+    venv = SKILLS_DIR / ".venv" / "bin" / "python"
+    python = str(venv) if venv.exists() else sys.executable
+    return subprocess.run([python, str(SKILLS_DIR / "scripts" / "cli.py"), *args],
+                          capture_output=True, text=True, errors="replace")
+
+
+def readback(page) -> dict:
+    got = json.loads(page.evaluate(READBACK_JS))
+    got["bodyLen"] = len(got.get("body", ""))
+    return got
+
+
+def normalize(text: str) -> str:
+    """Drop hashtags and all whitespace.
+
+    The filler pulls trailing `#tags` out of the body and re-adds them as topic
+    chips, and the editor re-wraps lines, so raw lengths never match.
+    """
+    return re.sub(r"\s+", "", re.sub(r"#[^\s#]+", "", text or ""))
+
+
+def split_tags(body: str) -> tuple[list[str], str]:
+    """Split a trailing `#a #b #c` line off the body.
+
+    The upstream CLI extracts that line itself and re-enters the tags with a JS
+    `.click()` on the topic dropdown. That click is not `isTrusted`, so tiptap's
+    topic handler ignores it and the text stays inert -- which is how a post
+    ends up with only its last hashtag as a real topic. We take the line out
+    ourselves and commit the topics with a trusted click instead.
+    """
+    lines = body.rstrip().split("\n")
+    if lines:
+        last = lines[-1].strip()
+        if TAG_LINE_RE.match(last):
+            seen: set[str] = set()
+            tags: list[str] = []
+            for t in re.findall(r"#([^\s#]+)", last):
+                if t not in seen:
+                    seen.add(t)
+                    tags.append(t)
+            return tags, "\n".join(lines[:-1]).rstrip()
+    return [], body
+
+
+def topic_count(page) -> int:
+    got = page.evaluate(TOPIC_COUNT_JS)
+    return int(got) if got else 0
+
+
+def commit_tag(page, tag: str, timeout: float = 4.0) -> bool:
+    """Turn the in-progress `#tag` into a real topic chip.
+
+    Requires a *trusted* click: `page.click_element` dispatches a synthetic
+    `el.click()`, which the page's tiptap topic handler discards. The bridge's
+    `click_nth_element` goes through CDP `Input.dispatchMouseEvent` instead,
+    and that works. Each click is verified against the topic count and retried,
+    because a click can also land without taking effect.
+    """
+    debug = os.environ.get("XHS_DEBUG")
+    deadline = time.monotonic() + timeout
+    tries = 0
+    while time.monotonic() < deadline and tries < 4:
+        found = page.evaluate(TAG_FIND_JS % json.dumps(tag))
+        if not found:
+            if debug:
+                print(f"    [{tag}] 下拉未就绪", file=sys.stderr)
+            time.sleep(0.25)
+            continue
+        tries += 1
+        before = topic_count(page)
+        try:
+            page._call("click_nth_element",
+                       {"selector": TOPIC_ITEM_SEL, "index": json.loads(found)["index"]})
+        except Exception as exc:
+            if debug:
+                print(f"    [{tag}] 点击异常 {exc}", file=sys.stderr)
+            time.sleep(0.3)
+            continue
+        time.sleep(0.7)
+        if topic_count(page) > before:
+            return True
+        if debug:
+            print(f"    [{tag}] 点了但没生效（第 {tries} 次）", file=sys.stderr)
+        time.sleep(0.3)
+    return False
+
+
+def editor_text(page) -> str:
+    return page.evaluate("(document.querySelector(%s)||{}).innerText||''" % json.dumps(EDITOR_SEL)) or ""
+
+
+def retract_tag(page, tag: str) -> bool:
+    """Remove an inert `#tag`, but only if it is genuinely the tail."""
+    before = len(editor_text(page))
+    got = page.evaluate(RETRACT_TAG_JS % (json.dumps(EDITOR_SEL),
+                                          json.dumps("#" + tag), len(tag) + 1))
+    time.sleep(0.3)
+    return got == "deleted" and len(editor_text(page)) == before - (len(tag) + 1)
+
+
+def enter_tags(page, tags: list[str], attempts: int = 2,
+               max_consecutive_failures: int = 2) -> tuple[list[str], list[str]]:
+    """Append the tags as real topic chips; returns (committed, failed).
+
+    Deliberately does not touch focus or the selection between tags: XHS's
+    suggestion component desyncs if something focuses the editor mid-flow, and
+    then it keeps serving the previous query's list and never refreshes.
+
+    When the dropdown is broken, every tag fails and each attempt costs seconds
+    of retyping; stop after a couple of consecutive failures so we neither waste
+    a minute nor hammer a failing endpoint. The leftovers stay visible in the
+    editor and `verify` will flag them.
+    """
+    page.evaluate(INSERT_TAG_LINE_JS % json.dumps(EDITOR_SEL))
+    time.sleep(0.8)
+
+    committed: list[str] = []
+    failed: list[str] = []
+    consecutive = 0
+    for i, tag in enumerate(tags):
+        ok = False
+        for attempt in range(attempts):
+            page.type_text("#", delay_ms=0)
+            time.sleep(0.2)
+            for char in tag:
+                page.type_text(char, delay_ms=0)
+                time.sleep(0.05)
+            if commit_tag(page, tag):
+                ok = True
+                break
+            # The dropdown sometimes never populates for one query; retype it.
+            if not retract_tag(page, tag):
+                break
+            time.sleep(0.4)
+        if ok:
+            committed.append(tag)
+            consecutive = 0
+        else:
+            # Terminate the inert text so it does not merge into the next tag.
+            page.type_text(" ", delay_ms=0)
+            failed.append(tag)
+            consecutive += 1
+            if consecutive >= max_consecutive_failures:
+                failed.extend(tags[i + 1:])
+                break
+        time.sleep(0.4)
+    return committed, failed
+
+
+# --------------------------------------------------------------------------- commands
+
+def cmd_status(_args) -> int:
+    page, _ = bridge()
+    ok_server = page.is_server_running()
+    ok_ext = page.is_extension_connected() if ok_server else False
+    print(f"bridge server : {'运行中' if ok_server else '未运行'}")
+    print(f"浏览器扩展    : {'已连接' if ok_ext else '未连接'}")
+    if ok_ext:
+        print(f"当前页面      : {page.evaluate('location.href')}")
+    else:
+        print("\n按 references/publishing.md 配置：\n"
+              f"  bash {Path(__file__).parent}/setup_bridge.sh")
+    return 0 if (ok_server and ok_ext) else 2
+
+
+def cmd_reset(_args) -> int:
+    page, _ = bridge()
+    page.navigate(PUBLISH_URL)
+    time.sleep(6)
+    print("已打开干净的发布页：", json.loads(readback_json(page))["url"])
+    return 0
+
+
+def readback_json(page) -> str:
+    return page.evaluate(READBACK_JS)
+
+
+def cmd_fill(args) -> int:
+    page, _ = bridge()
+    root = Path(args.dir).resolve()
+    title, body = root / args.title, root / args.body
+    images = resolve_images(root)
+    for path in (title, body):
+        if not path.exists():
+            die(f"缺少 {path}")
+    if not images:
+        die(f"{root} 下没有图片（先跑 render_cards.py）")
+
+    t = title.read_text(encoding="utf-8").strip()
+    if len(t) > 20:
+        die(f"标题 {len(t)} 字，超过 20 字上限：{t}")
+    b = body.read_text(encoding="utf-8").strip()
+    if len(b) > 1000:
+        print(f"警告：正文 {len(b)} 字，超过 1000 字上限", file=sys.stderr)
+
+    tags, clean_body = split_tags(b)
+
+    # Hand the CLI a body with no hashtags: its own tag routine clicks the
+    # dropdown with an untrusted JS click, which tiptap ignores, and the
+    # leftovers come out as inert text. We commit the topics ourselves below.
+    fd, tmp_body = tempfile.mkstemp(prefix="xhs-body-", suffix=".txt")
+    with os.fdopen(fd, "w", encoding="utf-8") as fh:
+        fh.write(clean_body)
+    try:
+        res = cli("fill-publish", "--title-file", str(title), "--content-file", tmp_body,
+                  "--images", *[str(p) for p in images])
+    finally:
+        os.unlink(tmp_body)
+    print(res.stdout[-2000:])
+    if "表单已填写" not in res.stdout:
+        print(res.stderr[-1500:], file=sys.stderr)
+        die("填写未完成")
+
+    if tags:
+        committed, failed = enter_tags(page, tags)
+        print(f"标签：{len(committed)}/{len(tags)} 生效" +
+              (f"，失败 {failed}" if failed else ""))
+        if failed:
+            print("警告：以上标签没能变成话题。它们现在是编辑器里的普通文字，"
+                  "请在页面上手动点成话题，或稍后重跑 `xhs.py tags`；"
+                  "确认前不要发布。", file=sys.stderr)
+
+    if args.collection:
+        rc = cmd_collection(argparse.Namespace(name=args.collection))
+        if rc:
+            return rc
+    return 1 if (tags and failed) else 0
+
+
+def cmd_tags(args) -> int:
+    """(Re)commit topic tags from the body file's trailing `#a #b #c` line."""
+    page, _ = bridge()
+    root = Path(args.dir).resolve()
+    tags, _ = split_tags((root / args.body).read_text(encoding="utf-8").strip())
+    if args.tags:
+        tags = [t.lstrip("#") for t in args.tags]
+    if not tags:
+        die(f"{root / args.body} 末尾没有 `#a #b #c` 标签行，也没有传 --tags")
+
+    before = topic_count(page)
+    committed, failed = enter_tags(page, tags)
+    after = topic_count(page)
+    print(f"标签：{len(committed)}/{len(tags)} 生效（页面话题数 {before} → {after}）")
+    if failed:
+        print(f"未生效：{failed}", file=sys.stderr)
+        return 1
+    return 0
+
+
+def resolve_images(root: Path) -> list[Path]:
+    """Pick the images to upload, in order.
+
+    Prefer manifest.json's card list: a blanket `*.jpg` glob silently picks up
+    stale renders (and duplicates the whole set) as soon as a directory holds
+    more than one naming scheme.
+    """
+    mf = root / "manifest.json"
+    if mf.exists():
+        try:
+            cards = json.loads(mf.read_text(encoding="utf-8")).get("cards") or []
+        except json.JSONDecodeError:
+            cards = []
+        picked = []
+        for c in cards:
+            for ext in (".jpg", ".png"):
+                p = root / f"{c['out']}{ext}"
+                if p.exists():
+                    picked.append(p)
+                    break
+            else:
+                die(f"manifest 里的 {c['out']} 还没渲染，先跑 render_cards.py")
+        if picked:
+            return picked
+
+    for pattern in ("[0-9][0-9]-*.jpg", "[0-9]-*.jpg"):
+        found = sorted(root.glob(pattern))
+        if found:
+            return found
+    return sorted(root.glob("*.jpg"))
+
+
+def cmd_collection(args) -> int:
+    page, _ = bridge()
+    name = args.name
+    current = page.evaluate(
+        "(document.querySelector('.collection-plugin-wrapper')||{}).innerText || ''")
+    if name in current:
+        print(f"合集已是「{name}」")
+        return 0
+
+    if not page.has_element(COLLECTION_BTN):
+        die("找不到「选择合集」按钮——页面结构可能改版了")
+    page.click_element(COLLECTION_BTN)
+    time.sleep(2)
+
+    clicked = page.evaluate("""(() => {
+      const el = [...document.querySelectorAll('.item-label,.item-content,.item')]
+        .find(e => e.textContent.trim() === %s);
+      if (!el) return 'missing';
+      const t = el.closest('.item') || el;
+      t.scrollIntoView({block:'center'});
+      const r = t.getBoundingClientRect(), x = r.left + r.width/2, y = r.top + r.height/2;
+      // These are custom components: a bare .click() is often ignored.
+      ['pointerdown','mousedown','pointerup','mouseup','click'].forEach(k =>
+        t.dispatchEvent(new MouseEvent(k, {bubbles:true, cancelable:true, clientX:x, clientY:y})));
+      return 'clicked';
+    })()""" % json.dumps(name))
+    time.sleep(2)
+
+    if clicked == "missing":
+        die(f"合集列表里没有「{name}」。可用合集：\n" + page.evaluate(
+            "[...document.querySelectorAll('.collection-plugin-wrapper .item-label')]"
+            ".map(e=>e.textContent.trim()).join('\\n')"))
+    after = page.evaluate(
+        "(document.querySelector('.collection-plugin-wrapper')||{}).innerText || ''")
+    if name not in after:
+        die(f"点了「{name}」但没生效，当前：{after.strip()[:80]}")
+    print(f"已加入合集「{name}」")
+    return 0
+
+
+def cmd_verify(args) -> int:
+    page, _ = bridge()
+    got = readback(page)
+    print(json.dumps(got, ensure_ascii=False, indent=2))
+
+    problems = []
+    if args.dir:
+        root = Path(args.dir).resolve()
+        want_title = (root / args.title).read_text(encoding="utf-8").strip()
+        raw_body = (root / args.body).read_text(encoding="utf-8")
+        want_tags, want_body = split_tags(raw_body.strip())
+        want_body = normalize(want_body)
+        got_body = normalize(got.get("body", ""))
+        want_imgs = len(resolve_images(root))
+
+        if got["title"] != want_title:
+            problems.append(f"标题不一致：页面「{got['title']}」 vs 本地「{want_title}」")
+        if want_body and not got_body.startswith(want_body[:30]):
+            problems.append("正文开头对不上，页面上可能不是这一篇")
+        slack = max(60, int(0.15 * len(want_body)))
+        if abs(len(got_body) - len(want_body)) > slack:
+            problems.append(
+                f"正文字数偏差过大：页面 {len(got_body)} vs 本地 {len(want_body)}"
+                f"（去标签后，容差 {slack}）")
+        if got["previews"] != want_imgs:
+            problems.append(f"图片张数不一致：页面 {got['previews']} vs 本地 {want_imgs}")
+        if want_tags and got.get("topics", 0) != len(want_tags):
+            problems.append(
+                f"话题标签没全部生效：页面 {got.get('topics', 0)} 个 vs 本地 {len(want_tags)} 个"
+                f"（{ '、'.join(want_tags) }）")
+    if args.collection and args.collection not in got["collection"]:
+        problems.append(f"合集不是「{args.collection}」：{got['collection'].strip()[:60]}")
+
+    for p in problems:
+        print(f"  ✗ {p}", file=sys.stderr)
+    print("回读一致" if not problems else "回读不一致", file=sys.stderr)
+    return 1 if problems else 0
+
+
+def cmd_publish(_args) -> int:
+    res = cli("click-publish")
+    print(res.stdout[-1200:])
+    page, _ = bridge()
+    time.sleep(3)
+    got = readback(page)
+    published = "published=true" in got["url"] or (got["previews"] == 0 and not got["title"])
+    print("页面状态：", json.dumps(got, ensure_ascii=False))
+    if published:
+        print("已提交（URL/表单状态确认）")
+    else:
+        print("页面没有出现已提交的迹象——手动看一眼再决定是否重试", file=sys.stderr)
+    return 0 if published else 1
+
+
+def cmd_check_published(args) -> int:
+    page, _ = bridge()
+    page.navigate(NOTE_MANAGER_URL)
+    time.sleep(6)
+    found = page.evaluate(
+        "JSON.stringify({has:(document.body.innerText||'').includes(%s)})"
+        % json.dumps(args.title))
+    if not json.loads(found)["has"]:
+        print("未在笔记管理中看到该标题。若刚发布，等一下再查。", file=sys.stderr)
+        return 1
+    print(f"「{args.title}」已在笔记管理中")
+    return 0
+
+
+def cmd_shot(args) -> int:
+    if sys.platform != "darwin":
+        die("shot 目前只支持 macOS")
+    out = args.out
+    for _ in range(4):
+        subprocess.run(["open", "-a", "Google Chrome"], check=False)
+        time.sleep(1.5)
+        front = subprocess.run(
+            ["osascript", "-e",
+             'tell application "System Events" to get name of first application process '
+             'whose frontmost is true'],
+            capture_output=True, text=True).stdout.strip()
+        if front == "Google Chrome":
+            subprocess.run(["screencapture", "-x", out], check=True)
+            print("已截图：", out)
+            return 0
+    die("Chrome 不是前台窗口，截图会抓到别的应用（Codex/ChatGPT 会抢焦点）")
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description="通过浏览器桥接操作小红书发布页")
+    sub = ap.add_subparsers(dest="cmd", required=True)
+
+    sub.add_parser("status", help="检查桥接与登录状态").set_defaults(fn=cmd_status)
+    sub.add_parser("reset", help="打开干净的发布页").set_defaults(fn=cmd_reset)
+
+    p = sub.add_parser("fill", help="上传图片并填写标题正文")
+    p.add_argument("--dir", required=True, help="post 目录（含图片与 title/body 文件）")
+    p.add_argument("--title", default="title.txt")
+    p.add_argument("--body", default="body.txt")
+    p.add_argument("--collection", default=None, help="填写后顺便加入的合集名")
+    p.set_defaults(fn=cmd_fill)
+
+    p = sub.add_parser("tags", help="把正文末尾的 #标签 提交成话题（可重跑）")
+    p.add_argument("--dir", required=True, help="post 目录（含 body 文件）")
+    p.add_argument("--body", default="body.txt")
+    p.add_argument("--tags", nargs="*", default=None, help="直接指定标签，覆盖文件")
+    p.set_defaults(fn=cmd_tags)
+
+    p = sub.add_parser("collection", help="加入合集")
+    p.add_argument("name")
+    p.set_defaults(fn=cmd_collection)
+
+    p = sub.add_parser("verify", help="回读表单并比对")
+    p.add_argument("--dir", default=None)
+    p.add_argument("--title", default="title.txt")
+    p.add_argument("--body", default="body.txt")
+    p.add_argument("--collection", default=None)
+    p.set_defaults(fn=cmd_verify)
+
+    sub.add_parser("publish", help="点击发布").set_defaults(fn=cmd_publish)
+
+    p = sub.add_parser("check-published", help="确认已发布")
+    p.add_argument("title")
+    p.set_defaults(fn=cmd_check_published)
+
+    p = sub.add_parser("shot", help="给用户看截图（macOS）")
+    p.add_argument("--out", default="/tmp/xhs-shot.png")
+    p.set_defaults(fn=cmd_shot)
+
+    args = ap.parse_args()
+    if args.cmd != "status":
+        ensure_server()
+    return args.fn(args)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<!-- 把 card.css 复制到同一目录 -->
+<link rel="stylesheet" href="card.css">
+<style>
+  /* 封面只有这几处需要动：标题字号、图片宽度、副标题 */
+  h1{font-size:88px;}
+</style>
+</head>
+<body>
+<div class="card">
+
+  <!-- 眉标：左=作者·年份，右=栏目·主题 -->
+  <div class="top">
+    <div class="kicker">MICHAEL POLANYI · 1969</div>
+    <div class="kicker">阅读笔记 · 意会认知</div>
+  </div>
+  <div class="rule"></div>
+
+  <!-- 一句话冲突。em 用来给关键字上强调色，不要整句都强调 -->
+  <h1>为什么你懂的，<br>永远比能<em style="font-style:normal;color:var(--accent)">说出来</em>的多</h1>
+  <p class="hsub">所知多于能言 &mdash; we can know more than we can tell.</p>
+
+  <!-- 主体图。手机拍的图先转 RGB PNG 并确认方向 -->
+  <div class="photo"><img src="../assets/subject.png" alt=""></div>
+
+  <div class="foot">
+    <span>认知与存在 &middot; 意会认知</span>
+    <span>南京大学出版社 2017</span>
+  </div>
+</div>
+</body>
+</html>
