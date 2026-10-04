@@ -67,6 +67,21 @@ p.navigate(url); p.evaluate("..."); p.click_element(sel)
 nohup .venv/bin/python scripts/bridge_server.py > /tmp/xhs-bridge.log 2>&1 &
 ```
 
+### 长正文会撞上命令超时（要打补丁）
+
+上游把命令超时硬编码在 90s（`xhs/bridge.py` 的 `ws.recv` 和 `bridge_server.py` 的
+`asyncio.wait_for`）。正文是逐字输入的，**~900 字带 8 个话题标签时会跑过 90s**，
+症状是 CLI 报「命令执行超时（90s）」而页面上其实已经填好了——重跑会把内容填两遍。
+
+补丁在 [`../patches/`](../patches/)，改成读 `XHS_CMD_TIMEOUT`（默认 300s）：
+
+```bash
+cd "$XHS_SKILLS_DIR" && git am <path>/bridge-command-timeout.patch
+```
+
+已提上游 PR [autoclaw-cc/xiaohongshu-skills#102](https://github.com/autoclaw-cc/xiaohongshu-skills/pull/102)；
+合入之后这段就可以删掉。
+
 ## 页面事实（会随小红书改版失效，用前先验）
 
 | 东西 | 选择器 / 事实 |
