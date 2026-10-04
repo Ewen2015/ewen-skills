@@ -199,9 +199,13 @@
 
 ## R10 · 找书这一步进队列（S1）
 
-状态：open
+状态：trialing
 记录：2026-10-05
 维度：工程 · 内容
+
+**落地**：`book-fetch` skill —— `scripts/fetch.py queue` 维护
+`~/.local/share/book-fetch/queue.json`，渲染成 `~/Documents/reading-queue.md`。
+2026-10-05 起用。**验收还没完成**：需要连续 2 本都从队列里选，且队列里始终 ≥ 3 本待读。
 
 **证据**：`~/Downloads` 里 4 个电子书文件全是手动找的，没有待读清单，
 也没有"为什么读这本"的记录。这一步在 `rsi.py report` 里被标为未埋点。
