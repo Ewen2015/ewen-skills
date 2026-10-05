@@ -64,6 +64,12 @@ metadata:
 
 **源素材要转成 RGB PNG 并确认方向**——手机拍的 HEIC 常带 EXIF 旋转，直接 `Image.open()` 会歪。
 
+**封面的主体图必须是实体书的照片，中文版优先。** 不要用电子书里抽的封面图、宣传图或意象图——
+中文读者在信息流里认的是"我见过／买得到的这本书"，一张实拍照片是最便宜的信任来源。
+拿到实拍后先用 [`scripts/prep_cover.py`](scripts/prep_cover.py) 摊平
+（`grid` 读四角 → `flat` 校正），处理完**贴给用户看一眼**再排版。选材判据与退路见
+[`references/cards.md`](references/cards.md#封面主体素材实体书照片优先)。
+
 ### 4. 本地实测
 
 ```bash
@@ -180,3 +186,4 @@ python3 <skill>/scripts/xhs.py status
 - [`references/copywriting.md`](references/copywriting.md)——标题公式、正文骨架、字数与标签规则
 - [`references/cards.md`](references/cards.md)——1080×1440 卡片系统、字号下限、素材处理
 - [`references/publishing.md`](references/publishing.md)——桥接环境、选择器、故障排查、发布后核验
+- [`scripts/prep_cover.py`](scripts/prep_cover.py)——把手机拍的实体书封面摊平成卡片可用图（`grid` / `flat`）
