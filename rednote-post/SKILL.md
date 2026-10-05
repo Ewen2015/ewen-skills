@@ -49,6 +49,10 @@ metadata:
 [`references/copywriting.md`](references/copywriting.md#正文没有加粗重音只能用这三招)，
 别去试 `**字**`。
 
+**成品里不许出现"待核实／需查证"这类半成品标记**（正文和卡片都算）。能核实就当场核实，
+核不了就把断言收缩成"这本书说……"，再不然整条删掉。发布前跑一次机械自检，见
+[`references/copywriting.md`](references/copywriting.md#成品里不许出现半成品标记)。
+
 > 标签必须逐个从联想下拉里用**真点击**选中才会变成话题；上游 CLI 用的是合成 JS 点击，
 > tiptap 会忽略，结果是只有最后一个标签生效。`fill` 已经绕开这条坏路径自己做，见
 > [`references/publishing.md`](references/publishing.md#话题标签必须用真点击这是最容易踩的坑)。
