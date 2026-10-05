@@ -38,7 +38,11 @@ python3 <skill>/scripts/fetch.py queue list
 python3 <skill>/scripts/fetch.py queue set --title "…" --status reading
 ```
 
-`download --queue` 会自动把选中的那份登记为 `fetched`。
+`download --queue` 会自动把选中的那份登记为 `fetched`；
+用户直接交来的文件走 `adopt`（验可达 → 只复制不移动 → 洗名字 → 登记），别手动 `cp`。
+
+`add` 是**按书名就地更新**，不是无脑追加：同一本书只会有一行，重复登记只会刷新它的
+状态与备注（空字段不覆盖已有值）。所以「同一本被登记两次」不会让队列长出两条。
 
 ## 队列的健康线
 

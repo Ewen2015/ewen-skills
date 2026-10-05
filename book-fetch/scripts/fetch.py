@@ -18,12 +18,15 @@ import json
 import os
 import re
 import shlex
+import shutil
 import statistics
 import subprocess
 import sys
 import unicodedata
 import urllib.parse
 import urllib.request
+import zipfile
+import xml.etree.ElementTree as ET
 from datetime import datetime
 from pathlib import Path
 
@@ -34,6 +37,7 @@ CACHE = HOME / ".cache/book-fetch"
 STATE = HOME / ".local/share/book-fetch"
 QUEUE_JSON = STATE / "queue.json"
 QUEUE_MD = HOME / "Documents/reading-queue.md"
+BOOKS_DIR = HOME / "Documents/books"
 
 UA = "book-fetch/0.1 (personal reading pipeline)"
 
@@ -504,16 +508,30 @@ def render_html(payload: dict) -> str:
 """
 
 
-def clean_filename(title: str, author: str, ext: str) -> str:
-    """生成干净文件名：去掉书名号里的来源后缀、站点名与多余括号。
+_NAME_NOISE = (
+    # 括号里出现域名样式的 token → 来源信息。
+    re.compile(r"[（(][^）)]*[a-z0-9-]+\.[a-z]{2,4}[^）)]*[）)]", re.I),
+    # 括号里带句读（。！？，、；）→ 是营销文案，不是书名。
+    re.compile(r"[（(][^）)]*[。！？，、；][^）)]*[）)]"),
+    # 括号里是纯拉丁短标记、且带连字符/点/数字 → 站点或版本标记（如 `(XXX-Yyy)`）。
+    re.compile(r"[（(](?=[^\s）)]{1,25}[）)])[A-Za-z0-9][^\s）)]*[-._0-9][^\s）)]*[）)]"),
+)
 
-    下载器给的文件名常带站点后缀（形如 `书名 (site.sk, site2.sk).epub`），
-    那属于来源信息，不该留在书库和笔记里。
+
+def clean_filename(title: str, author: str, ext: str) -> str:
+    """生成干净文件名：去掉书名里的来源后缀、站点标记与营销文案。
+
+    三类噪声都来自**文件名/著录本身**，不是书的内容，不该留在书库、笔记和卡片里：
+    ① 站点后缀（形如 `书名 (site.sk, site2.sk)`）；② 营销括号（`书名（…鼎力推荐。）`）；
+    ③ 纯拉丁的站点/版本标记（`书名 (XXX-Yyy)`）。
+    规则**不列举具体站点**——列举会过时，也会把来源信息写进仓库。
     """
     t = str(title or "未命名")
-    # 通用规则：括号里只要出现域名样式的 token，整块去掉。
-    # 不列举具体站点——列举会过时，也会把来源信息写进仓库。
-    t = re.sub(r"[（(][^）)]*[a-z0-9-]+\.[a-z]{2,4}[^）)]*[）)]", "", t, flags=re.I)
+    for pat in _NAME_NOISE:
+        prev = None
+        while prev != t:          # 一个名字上可能挂着好几块，反复清到不动为止
+            prev = t
+            t = pat.sub("", t)
     t = re.sub(r"[\\/:*?\"<>|]+", " ", t)
     t = re.sub(r"\s{2,}", " ", t).strip(" .-_")
     a = re.sub(r"[\\/:*?\"<>|]+", " ", str(author or "")).strip()
@@ -562,9 +580,16 @@ def cmd_queue(args) -> int:
     q = load_json(QUEUE_JSON, {"items": []})
     items = q.get("items") or []
     if args.action == "add":
-        items.append({"title": args.title, "author": args.author, "file": args.file,
-                      "result_id": args.result_id, "status": args.status or "fetched",
-                      "note": args.note or "", "added_at": datetime.now().date().isoformat()})
+        rec = {"title": args.title, "author": args.author, "file": args.file,
+               "result_id": args.result_id, "status": args.status or "fetched",
+               "note": args.note or "", "added_at": datetime.now().date().isoformat()}
+        # 同名 = 同一本，就地更新而不是再叠一条（否则队列会出现两行同一本书）
+        for i, it in enumerate(items):
+            if norm(it.get("title")) == norm(rec["title"]):
+                items[i] = {**it, **{k: v for k, v in rec.items() if v not in ("", None)}}
+                break
+        else:
+            items.append(rec)
     elif args.action == "list":
         pass
     elif args.action == "set":
@@ -691,6 +716,106 @@ def cmd_check_source(args) -> int:
     return 0
 
 
+def _epub_metadata(path: Path) -> dict:
+    """从 epub 自己的著录里取书名与作者（dc:title / dc:creator）。
+
+    这个文件已经躺在手里了，书名不该再靠猜文件名——文件名是下载器起的，著录是出版社给的。
+    取不到就返回空 dict，由调用方回退，不抛异常。
+    """
+    out: dict = {}
+    try:
+        with zipfile.ZipFile(path) as z:
+            names = z.namelist()
+            opf = None
+            if "META-INF/container.xml" in names:
+                for rf in ET.fromstring(z.read("META-INF/container.xml")).iter():
+                    if rf.tag.endswith("rootfile") and rf.get("full-path"):
+                        opf = rf.get("full-path")
+                        break
+            if not opf:
+                cands = [n for n in names if n.lower().endswith(".opf")]
+                opf = cands[0] if cands else None
+            if not opf:
+                return out
+            for el in ET.fromstring(z.read(opf)).iter():
+                tag = el.tag.split("}")[-1]
+                val = (el.text or "").strip()
+                if not val:
+                    continue
+                if tag == "title" and "title" not in out:
+                    out["title"] = val
+                elif tag == "creator" and "creator" not in out:
+                    out["creator"] = val
+                elif tag == "language" and "lang" not in out:
+                    out["lang"] = val
+    except (zipfile.BadZipFile, ET.ParseError, KeyError, OSError):
+        return out
+    return out
+
+
+def _looks_uninformative(stem: str) -> bool:
+    """文件名是不是"没有信息量"（哈希串、纯数字）——是的话别拿它当书名。"""
+    s = stem.strip()
+    if len(s) < 2:
+        return True
+    if re.fullmatch(r"[0-9a-fA-F]{8,}", s):          # 下载器给的哈希
+        return True
+    if re.fullmatch(r"[\d\s.\-_]+", s):              # 纯数字（ISBN、序号）
+        return True
+    return False
+
+
+def cmd_adopt(args) -> int:
+    """把用户直接交来的文件收编进书库：验可达 → 落位 → 洗名字 → 登记队列。
+
+    走的是和 `download` 同一条尾巴。**只复制不移动**：用户手里那份原件不动。
+    """
+    src = Path(os.path.expanduser(args.path))
+    rc = cmd_check_source(argparse.Namespace(path=str(src)))
+    if rc != 0:
+        print("\n→ 先把上面的问题解决，再重新 adopt。（这一步没有任何写入）")
+        return rc
+
+    outdir = Path(os.path.expanduser(args.into)).expanduser()
+    outdir.mkdir(parents=True, exist_ok=True)
+    target = src
+    if src.resolve().parent != outdir.resolve():
+        target = outdir / src.name
+        if target.exists():
+            die(f"书库里已经有同名文件，先处理重名：{target}")
+        shutil.copy2(src, target)
+        print(f"\n已复制进书库：{target}（原件没动）")
+
+    meta = _epub_metadata(target) if target.suffix.lower() == ".epub" else {}
+    raw_stem = clean_filename(target.stem, "", "")
+    # 文件名常写成「书名 - 作者」。后半段只有在**著录能对上**（或根本没有著录）时才当作者，
+    # 否则会把 `Sapiens - A Brief History` 这种真副标题砍掉。
+    creator = str(meta.get("creator") or "").strip()
+    tail_author = ""
+    if " - " in raw_stem:
+        head, tail = raw_stem.rsplit(" - ", 1)
+        if tail and len(tail) <= 30 and (not creator or norm(tail) == norm(creator)):
+            tail_author, raw_stem = tail, head
+    title = args.title or (meta.get("title") if _looks_uninformative(raw_stem) else raw_stem)
+    if not title or _looks_uninformative(title):
+        title = meta.get("title") or raw_stem or "未命名"
+    author = args.author or creator or tail_author
+    clean = target.with_name(clean_filename(title, author, target.suffix.lower()))
+    if clean != target:
+        if clean.exists():
+            die(f"洗后的名字已经存在，先处理重名：{clean}")
+        target.rename(clean)
+        print(f"已洗掉名字里的来源/文案：{clean.name}")
+        target = clean
+    print(f"书库文件：{target}")
+    if target.suffix.lower() == ".pdf":
+        print("提醒：pdf 需要检测文字层；若是扫描件，先确认要不要走 OCR 再决定是否用它做笔记。")
+    cmd_queue(argparse.Namespace(action="add", title=title, author=author or None,
+                                 file=str(target), result_id="external",
+                                 note=args.note, status=args.status))
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="book-fetch：找书、评分、确认、下载、登记队列")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -701,6 +826,15 @@ def main() -> int:
     p = sub.add_parser("check-source", help="交书入口的前置检查：这个路径读得到吗（只报告）")
     p.add_argument("--path", required=True, help="用户交来的 epub/pdf 路径")
     p.set_defaults(fn=cmd_check_source)
+
+    p = sub.add_parser("adopt", help="收编用户直接交来的文件：验可达 → 落位 → 洗名字 → 登记")
+    p.add_argument("--path", required=True, help="用户交来的 epub/pdf 路径")
+    p.add_argument("--into", default=str(BOOKS_DIR), help=f"书库目录，默认 {BOOKS_DIR}")
+    p.add_argument("--title", help="覆盖书名（文件名和著录都不可信时用）")
+    p.add_argument("--author", help="覆盖作者")
+    p.add_argument("--status", default="fetched", help="登记状态，默认 fetched")
+    p.add_argument("--note", default="")
+    p.set_defaults(fn=cmd_adopt)
 
     p = sub.add_parser("shortlist", help="剔除李鬼、打分、解析封面与书目")
     p.add_argument("--file", help="用指定的搜索结果文件，默认用最近一次")

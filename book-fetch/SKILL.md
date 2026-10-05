@@ -18,6 +18,9 @@ description: >-
 search → shortlist（打分+封面） → 【用户确认格式与封面】 → download → queue
                                           ↑
                               缺这一步就等于替用户做了他没做过的决定
+
+用户直接交来一个文件 ─────────────────────→ adopt ──────────→ queue
+                                          （验可达 → 落位 → 洗名字 → 登记）
 ```
 
 它是 [`rsi-reading`](../rsi-reading) 地图里的 **S1 取得书**。产物接着走 `read-a-book`，
@@ -65,6 +68,28 @@ python3 <skill>/scripts/fetch.py check-source --path "<路径>"
   两条修复：① 拖到 `~/Documents/books`；② 给**正在跑 agent 的那个 app**
   （不是 Terminal）开完全磁盘访问权限，然后完全退出并重开它。
 - `check-source` **只报告，不移动、不改名、不复制**。和 `download` 的 preflight 一个路数。
+
+#### 收编：`adopt`
+
+读得到就**别手动 `cp` + 手动改名**——手动搬的文件不走 `clean_filename`，
+来源后缀会一路漏进书库、笔记、卡片和公开发布物。用 `adopt` 走 `download` 的同一条尾巴：
+
+```bash
+python3 <skill>/scripts/fetch.py adopt --path "<路径>" [--title "…"] [--author "…"] [--status fetched]
+```
+
+它依次做四件事，任何一步失败就停下、不写任何东西：
+
+1. 跑一遍 `check-source`（可达性 / 是否 iCloud 占位符）；
+2. **只复制不移动**——文件不在 `~/Documents/books` 就复制进去，用户手里那份原件不动；
+3. 洗名字：书名优先取**文件自己的著录**（epub 的 `dc:title`/`dc:creator`），
+   文件名没有信息量（哈希、纯数字）时才回退到著录；两类都会过 `clean_filename`
+   去掉站点后缀和营销文案（`书名（…鼎力推荐。）`、`书名 (XXX-Yyy)`）；
+   文件名里的「书名 - 作者」只在**著录能对上时**才拆开，免得砍掉真副标题；
+4. 登记进待读队列（同名 = 同一本，**就地更新**，不会叠成两条）。
+
+书名和著录都不对时，用 `--title` / `--author` 显式覆盖——**不要靠改文件名绕过**，
+改了下次 `adopt` 也认不出来。
 
 ### 1. 找候选
 

@@ -644,4 +644,55 @@ reset/fill/verify/original/schedule/publish，没有 delete / unschedule / edit�
 
 ---
 
+### R27 · 交书入口的第二个症状：文件绕过了 `clean_filename`，也没进队列
+
+状态：adopted
+记录：2026-10-05
+维度：工程 · 取书（S1）
+
+**证据（用户介入）**：R26 的观察直接兑现了。用户手动交进来 5 本书，
+其中 4 本的**文件名还带着来源后缀**（站点域名、`(XXX-Yyy)`、还有一条把整段营销文案
+写进书名里的），`~/Documents/books/` 和 `reading-queue.md` 都跟着脏；
+队列里只有 1 本（Pale Blue Dot），其余 4 本读完了也不在册。
+根因是 `clean_filename()` 只长在 `cmd_download` 里——**外部交进来的文件天然绕过它**，
+而上游 R26 还教用户「手动拖到 books」。两条规则互相打架：一条让人手动搬，一条只洗自动下载的。
+
+**假设**：把「验可达 → 落位 → 洗名字 → 登记」固化成一个 `adopt` 命令，
+手动入口就不会漏掉自动入口享受的清洗与登记；顺带把 `clean_filename` 的覆盖面补到真样本上。
+
+**最小试验（已做）**：
+- 给 `book-fetch` 加 `fetch.py adopt --path <p> [--into] [--title] [--author] [--status] [--note]`。
+  任何一步失败即停、零写入；**只复制不移动**。
+- 补齐 `clean_filename` 的三条括号规则（都**不列举站点名**，避免把来源写进仓库）：
+  ① 域名样式 token；② 带句读 → 是营销文案不是书名；③ 纯拉丁短标记且带连字符/点/数字。
+- 书名解析顺序改成「显式 `--title` > 文件名清洗后的主体 > epub 著录」，
+  文件名是哈希/纯数字时才回退著录；「书名 - 作者」只在著录能对上时才拆。
+- `queue add` 改成**按书名就地更新**，否则 `adopt` 会把同一本书登记两遍。
+
+**实测**（先复制到 `/tmp` 跑，跑完还原队列，再对真库执行）：
+- 5 本真书全部收编：文件名去掉来源后缀与营销文案（最长那条从 60+ 字压到
+  `俞军产品方法论`），4 本补齐 `done`、1 本 `reading`，队列 1 条 → 5 条。
+- **Pale Blue Dot 走到 upsert 上**：`Pale Blue Dot - Carl Sagan` 与已有 `Pale Blue Dot`
+  合并为一行，备注保留（第一版没拆「书名 - 作者」，叠出了第二条，已修）。
+- 11 条反例回归：`Sapiens - A Brief History`、`Dune (Book 1)`、`Sapiens (Illustrated)`、
+  `思考的框架系列（共三册）`、`思考，快与慢` 全部**未被误删** ✅。
+- 硬规则回归：`~/Documents/reading-queue.md` 与 `queue.json` 里来源字符串零命中 ✅。
+
+**落地**：`book-fetch/scripts/fetch.py`（`adopt` + `_epub_metadata` + `_looks_uninformative`
++ `_NAME_NOISE` 三条规则 + `queue add` upsert + `BOOKS_DIR`）；
+`book-fetch/SKILL.md` 步骤 0 新增「#### 收编：`adopt`」；
+`book-fetch/references/queue.md` 注明 upsert 语义；
+`rsi-reading/references/loop-map.md` 的 S1 证据列改为「文件名已洗干净、5 本全在册」。
+
+**验收**：下次用户交来一个文件名带来源后缀的 epub，**一条 `adopt` 之后**
+书库文件名、`reading-queue.md`、后续 notes 里都查不到来源字符串。
+
+**观察**：保留观察。已知局限两条——
+① 括号规则是启发式，n=5，真实世界里还会有没覆盖的命名法（比如书名本身就是
+`书名 (站点)` 这种风格）；② 书名取「文件名优先」是**这一批样本**上更好的选择
+（著录里 `dc:title` 有时反而更短或更脏），换一批书可能要翻过来。
+判据都是「库里同一本书只有一行、名字里没有名字之外的东西」，可直接复测。
+
+---
+
 （更早的条目走完「最小试验 → 验收」后移到这里，附上日期和观察到的变化。）
