@@ -1,6 +1,6 @@
 {
  "version": 1,
- "count": 7,
+ "count": 8,
  "dimensions": {
   "尺度": [
    "pale-blue-dot"
@@ -11,6 +11,7 @@
    "yujun-product-methodology"
   ],
   "二阶效应": [
+   "prisoners-of-our-thoughts",
    "thinking-in-models"
   ],
   "最弱环节": [
@@ -43,16 +44,19 @@
    "knowing-and-being"
   ],
   "焦点与附带": [
-   "knowing-and-being"
+   "knowing-and-being",
+   "prisoners-of-our-thoughts"
   ],
   "自治与被计划": [
    "knowing-and-being"
   ],
   "意义自赋": [
-   "pale-blue-dot"
+   "pale-blue-dot",
+   "prisoners-of-our-thoughts"
   ],
   "欲望与缺憾": [
-   "naval-almanack"
+   "naval-almanack",
+   "prisoners-of-our-thoughts"
   ],
   "自我怀疑与作品": [
    "the-creative-act"
@@ -63,6 +67,7 @@
    "yujun-product-methodology"
   ],
   "自尊与自我修正": [
+   "prisoners-of-our-thoughts",
    "thinking-in-models"
   ],
   "概率与随机": [
@@ -175,7 +180,7 @@
    "notes": "notes/blue-ocean-strategy.md",
    "card": "blue-ocean-strategy.md",
    "weight": 0,
-   "card_tokens_est": 2159
+   "card_tokens_est": 2132
   },
   "knowing-and-being": {
    "title": "认知与存在：迈克尔·波兰尼文集",
@@ -378,6 +383,94 @@
    "card": "pale-blue-dot.md",
    "weight": 0,
    "card_tokens_est": 1991
+  },
+  "prisoners-of-our-thoughts": {
+   "title": "思维的囚徒",
+   "author": "亚历克斯·佩塔克斯（Alex Pattakos）、伊莱恩·丹顿（Elaine Dundon）",
+   "editor": [],
+   "lens": "这件事我能不能改变？不能改变的那部分，我打算用什么态度对待它？我是不是太盯着结果／太盯着自己了？",
+   "thesis": "环境能夺走一切，夺不走你选择态度的自由；意义不在远方等你成功，它就在眼前的处境里等着被发现；而找到它最好的方式，是忘掉自己在找它。",
+   "dimensions": [
+    "意义自赋",
+    "焦点与附带",
+    "欲望与缺憾",
+    "二阶效应",
+    "自尊与自我修正"
+   ],
+   "triggers": [
+    "没意义",
+    "提不起劲",
+    "上班没劲",
+    "工作没意思",
+    "倦怠",
+    "内耗",
+    "空虚",
+    "麻木",
+    "抱怨",
+    "消极",
+    "受害者",
+    "越努力越糟",
+    "越想做成越做不成",
+    "用力过猛",
+    "适得其反",
+    "过度反思",
+    "反复想",
+    "钻牛角尖",
+    "越关注越严重",
+    "睡不着",
+    "焦虑",
+    "抑郁",
+    "心态",
+    "换个态度",
+    "选择态度",
+    "责任",
+    "弗兰克尔",
+    "意义疗法",
+    "活出生命的意义",
+    "为什么要工作",
+    "工作的意义",
+    "找不到目标",
+    "目标感",
+    "成功",
+    "不要把成功当目标",
+    "幸福",
+    "追求快乐",
+    "自我超越",
+    "自我分离",
+    "幽默",
+    "从远处看自己",
+    "减反省法",
+    "矛盾意向",
+    "意义时刻",
+    "创造价值",
+    "经验价值",
+    "态度价值",
+    "OPA",
+    "与人建立联系",
+    "村子",
+    "归属",
+    "团队氛围",
+    "微观管理",
+    "管太细",
+    "领导",
+    "管理者",
+    "怎么带人",
+    "工作态度"
+   ],
+   "domains": [
+    "心理学",
+    "意义疗法",
+    "职场",
+    "自助",
+    "存在主义"
+   ],
+   "source_type": "二手阐释 + 一手经验——作者是弗兰克尔的学生与传播者，不是研究者",
+   "source_warning": "论点全靠\"名言 + 自选案例\"，没有失败样本；且把责任几乎全部落在个人身上，结构性问题被处理成\"你如何选择态度\"。这条框架在糟糕处境里极易滑成让人闭嘴的话术，引用时要把\"该换态度\"和\"该换处境\"分开。",
+   "read_at": "2026-10-05",
+   "notes": "notes/prisoners-of-our-thoughts.md",
+   "card": "prisoners-of-our-thoughts.md",
+   "weight": 0,
+   "card_tokens_est": 2334
   },
   "the-creative-act": {
    "title": "The Creative Act: A Way of Being",

@@ -18,9 +18,9 @@ pale-blue-dot
 先问这是不是真取舍，还是被自己设成了二选一。
 blue-ocean-strategy · pale-blue-dot · yujun-product-methodology
 
-## 二阶效应（1 本）
+## 二阶效应（2 本）
 结果背后的结果，不假装连锁反应不存在。
-thinking-in-models
+prisoners-of-our-thoughts · thinking-in-models
 
 ## 最弱环节（1 本）
 乘法系统里，一项归零会把其余全部吃掉。
@@ -58,21 +58,21 @@ naval-almanack · yujun-product-methodology
 有些判断说不清但确实知道，写成条目反而失真。
 knowing-and-being
 
-## 焦点与附带（1 本）
+## 焦点与附带（2 本）
 把平时不当回事的东西硬拽到焦点上，判断会被破坏。
-knowing-and-being
+prisoners-of-our-thoughts · knowing-and-being
 
 ## 自治与被计划（1 本）
 谁在定目标——被安排的活和自己的主动性，产出机制不同。
 knowing-and-being
 
-## 意义自赋（1 本）
+## 意义自赋（2 本）
 意义不是被赐予的，是人自己保管的，所以责任更重而不是更轻。
-pale-blue-dot
+pale-blue-dot · prisoners-of-our-thoughts
 
-## 欲望与缺憾（1 本）
+## 欲望与缺憾（2 本）
 不得到就不快乐，是一份可以撤掉的约定。
-naval-almanack
+naval-almanack · prisoners-of-our-thoughts
 
 ## 自我怀疑与作品（1 本）
 分清怀疑的是这件事，还是怀疑自己。
@@ -82,9 +82,9 @@ the-creative-act
 报表、职级、简历都是地图，不是现实本身。
 blue-ocean-strategy · yujun-product-methodology · thinking-in-models
 
-## 自尊与自我修正（1 本）
+## 自尊与自我修正（2 本）
 挡住改主意的往往不是无知，是自尊。
-thinking-in-models
+prisoners-of-our-thoughts · thinking-in-models
 
 ## 概率与随机（2 本）
 分清运气和本事，别把均值回归当成趋势。
