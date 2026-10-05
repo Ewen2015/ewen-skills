@@ -36,6 +36,7 @@
 python3 <skill>/scripts/fetch.py queue add --title "…" --author "…" --file "…" --note "…"
 python3 <skill>/scripts/fetch.py queue list
 python3 <skill>/scripts/fetch.py queue set --title "…" --status reading
+python3 <skill>/scripts/fetch.py queue --title "…" --status done --note "成品出处" set
 ```
 
 `download --queue` 会自动把选中的那份登记为 `fetched`；
@@ -43,6 +44,9 @@ python3 <skill>/scripts/fetch.py queue set --title "…" --status reading
 
 `add` 是**按书名就地更新**，不是无脑追加：同一本书只会有一行，重复登记只会刷新它的
 状态与备注（空字段不覆盖已有值）。所以「同一本被登记两次」不会让队列长出两条。
+
+`set` 同理**只改显式传入的字段**：`--status reading` 不会顺手把备注抹掉；
+一个字段都不给会直接报错退出，不做事。
 
 ## 队列的健康线
 

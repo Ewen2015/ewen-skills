@@ -1,12 +1,13 @@
 {
  "version": 1,
- "count": 5,
+ "count": 6,
  "dimensions": {
   "尺度": [
    "pale-blue-dot"
   ],
   "假两难": [
-   "pale-blue-dot"
+   "pale-blue-dot",
+   "yujun-product-methodology"
   ],
   "二阶效应": [
    "thinking-in-models"
@@ -33,7 +34,8 @@
    "naval-almanack"
   ],
   "专长与替代": [
-   "naval-almanack"
+   "naval-almanack",
+   "yujun-product-methodology"
   ],
   "意会与不可言说": [
    "knowing-and-being"
@@ -54,7 +56,8 @@
    "the-creative-act"
   ],
   "地图与疆域": [
-   "thinking-in-models"
+   "thinking-in-models",
+   "yujun-product-methodology"
   ],
   "自尊与自我修正": [
    "thinking-in-models"
@@ -62,7 +65,9 @@
   "概率与随机": [
    "thinking-in-models"
   ],
-  "代价与机会成本": [],
+  "代价与机会成本": [
+   "yujun-product-methodology"
+  ],
   "身份与角色": [
    "the-creative-act"
   ],
@@ -398,6 +403,92 @@
    "card": "thinking-in-models.md",
    "weight": 0,
    "card_tokens_est": 1535
+  },
+  "yujun-product-methodology": {
+   "title": "俞军产品方法论",
+   "author": "俞军 等",
+   "editor": [],
+   "lens": "这笔交换里，谁的什么成本付出去了却没被收到？目标是理性的吗——还是我在一个错的目标上求最优解？",
+   "thesis": "企业以产品为媒介与用户做价值交换；产品经理的核心工作是把用户模型和交易模型做准，在约束条件下创造\"有利可图的用户价值\"。",
+   "dimensions": [
+    "代价与机会成本",
+    "假两难",
+    "地图与疆域",
+    "专长与替代"
+   ],
+   "triggers": [
+    "值不值",
+    "划不划算",
+    "机会成本",
+    "代价",
+    "付出了什么",
+    "隐性成本",
+    "沉没成本",
+    "用户要什么",
+    "理解用户",
+    "需求",
+    "伪需求",
+    "该不该做这个功能",
+    "做什么不做什么",
+    "优先级",
+    "权衡",
+    "取舍",
+    "二选一",
+    "用户价值和商业价值冲突",
+    "商业化和用户体验",
+    "用户体验",
+    "体验好有什么用",
+    "变现",
+    "怎么赚钱",
+    "定价",
+    "免费还是收费",
+    "补贴",
+    "增长",
+    "留存",
+    "转化",
+    "指标",
+    "数据好看",
+    "AB测试",
+    "数据决策",
+    "拍脑袋",
+    "决策质量",
+    "理性决策",
+    "认知偏误",
+    "我是不是想错了",
+    "产品经理",
+    "转产品",
+    "产品经理成长",
+    "产品经理天赋",
+    "我适合做产品吗",
+    "招聘",
+    "选人",
+    "面试",
+    "空降",
+    "团队",
+    "怎么说服老板",
+    "推动不了",
+    "落地",
+    "公平还是效率",
+    "排队",
+    "平台规则",
+    "谁是用户",
+    "用户是谁"
+   ],
+   "domains": [
+    "产品",
+    "交易",
+    "决策",
+    "用户研究",
+    "组织",
+    "职业成长"
+   ],
+   "source_type": "一手（署名作者，但为团队汇集整理；概念源头多为转述）",
+   "source_warning": "经济学部分是**工具性转述**，不是学术论证——引用时要说清\"这是作者的使用方式\"，不是经济学共识；\"人是自私的\"是**公理不是发现**；公平/效率的取舍没有给判据。",
+   "read_at": "2026-10-05",
+   "notes": "notes/yujun-product-methodology.md",
+   "card": "yujun-product-methodology.md",
+   "weight": 0,
+   "card_tokens_est": 2161
   }
  }
 }

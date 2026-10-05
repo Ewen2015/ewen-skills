@@ -593,10 +593,16 @@ def cmd_queue(args) -> int:
     elif args.action == "list":
         pass
     elif args.action == "set":
+        # 只更新显式传入的字段：省略的保持原值，否则一次 set 会把备注抹掉。
+        patch = {k: v for k, v in (("status", args.status), ("author", args.author),
+                                   ("file", args.file), ("note", args.note))
+                 if v not in ("", None)}
+        if not patch:
+            die("set 至少要给一个要改的字段（--status / --author / --file / --note）")
         n = 0
         for it in items:
             if norm(it.get("title")) == norm(args.title):
-                it["status"] = args.status
+                it.update(patch)
                 n += 1
         if not n:
             die(f"队列里没有《{args.title}》")

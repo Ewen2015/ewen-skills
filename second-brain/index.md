@@ -14,9 +14,9 @@
 把问题放到更大的坐标里再看，判断会变。
 pale-blue-dot
 
-## 假两难（1 本）
+## 假两难（2 本）
 先问这是不是真取舍，还是被自己设成了二选一。
-pale-blue-dot
+pale-blue-dot · yujun-product-methodology
 
 ## 二阶效应（1 本）
 结果背后的结果，不假装连锁反应不存在。
@@ -50,9 +50,9 @@ naval-almanack
 什么能放大你的产出，且不需要别人点头。
 naval-almanack
 
-## 专长与替代（1 本）
+## 专长与替代（2 本）
 这份本事能不能被培训出来——能被培训，就能被取代。
-naval-almanack
+naval-almanack · yujun-product-methodology
 
 ## 意会与不可言说（1 本）
 有些判断说不清但确实知道，写成条目反而失真。
@@ -78,9 +78,9 @@ naval-almanack
 分清怀疑的是这件事，还是怀疑自己。
 the-creative-act
 
-## 地图与疆域（1 本）
+## 地图与疆域（2 本）
 报表、职级、简历都是地图，不是现实本身。
-thinking-in-models
+yujun-product-methodology · thinking-in-models
 
 ## 自尊与自我修正（1 本）
 挡住改主意的往往不是无知，是自尊。
@@ -90,9 +90,9 @@ thinking-in-models
 分清运气和本事，别把均值回归当成趋势。
 thinking-in-models
 
-## 代价与机会成本（0 本）
+## 代价与机会成本（1 本）
 选它放弃了什么——不做的代价也要算。
-（暂无）
+yujun-product-methodology
 
 ## 身份与角色（1 本）
 这个选择在回答"我是谁"。
