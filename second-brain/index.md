@@ -14,9 +14,9 @@
 把问题放到更大的坐标里再看，判断会变。
 pale-blue-dot
 
-## 假两难（2 本）
+## 假两难（3 本）
 先问这是不是真取舍，还是被自己设成了二选一。
-pale-blue-dot · yujun-product-methodology
+blue-ocean-strategy · pale-blue-dot · yujun-product-methodology
 
 ## 二阶效应（1 本）
 结果背后的结果，不假装连锁反应不存在。
@@ -46,9 +46,9 @@ the-creative-act
 先分清在玩哪种游戏——地位是零和，财富是正和。
 naval-almanack
 
-## 杠杆（1 本）
+## 杠杆（2 本）
 什么能放大你的产出，且不需要别人点头。
-naval-almanack
+blue-ocean-strategy · naval-almanack
 
 ## 专长与替代（2 本）
 这份本事能不能被培训出来——能被培训，就能被取代。
@@ -78,17 +78,17 @@ naval-almanack
 分清怀疑的是这件事，还是怀疑自己。
 the-creative-act
 
-## 地图与疆域（2 本）
+## 地图与疆域（3 本）
 报表、职级、简历都是地图，不是现实本身。
-yujun-product-methodology · thinking-in-models
+blue-ocean-strategy · yujun-product-methodology · thinking-in-models
 
 ## 自尊与自我修正（1 本）
 挡住改主意的往往不是无知，是自尊。
 thinking-in-models
 
-## 概率与随机（1 本）
+## 概率与随机（2 本）
 分清运气和本事，别把均值回归当成趋势。
-thinking-in-models
+blue-ocean-strategy · thinking-in-models
 
 ## 代价与机会成本（1 本）
 选它放弃了什么——不做的代价也要算。
@@ -106,6 +106,6 @@ the-creative-act
 整体不等于零件之和，拆开就看不见了。
 knowing-and-being
 
-## 传统与共识（1 本）
+## 传统与共识（2 本）
 共识怎么形成，又怎么被合理地推翻。
-knowing-and-being
+blue-ocean-strategy · knowing-and-being

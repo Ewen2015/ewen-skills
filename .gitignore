@@ -1,3 +1,6 @@
 __pycache__/
 *.pyc
 .DS_Store
+
+# 本地跑 xhs_state.py 时别把平台快照写进这个仓库
+state/

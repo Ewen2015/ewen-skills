@@ -827,6 +827,7 @@ def main() -> int:
     sub = ap.add_subparsers(dest="cmd", required=True)
 
     p = sub.add_parser("search", help="调用外部适配器找候选")
+    p.add_argument("query")
     p.set_defaults(fn=cmd_search)
 
     p = sub.add_parser("check-source", help="交书入口的前置检查：这个路径读得到吗（只报告）")
