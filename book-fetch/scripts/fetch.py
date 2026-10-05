@@ -519,7 +519,8 @@ def clean_filename(title: str, author: str, ext: str) -> str:
     a = re.sub(r"[\\/:*?\"<>|]+", " ", str(author or "")).strip()
     a = re.split(r"[;,]", a)[0].strip()
     name = f"{t} - {a}" if a and a.lower() not in t.lower() else t
-    return (name[:150].strip() or "book") + ext
+    ext = str(ext or "").strip().lstrip(".").lower()
+    return (name[:150].strip() or "book") + (f".{ext}" if ext else "")
 
 
 def cmd_download(args) -> int:
