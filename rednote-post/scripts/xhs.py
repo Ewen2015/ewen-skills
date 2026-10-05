@@ -15,6 +15,7 @@ Subcommands:
   verify   [--dir D]          read the form back and compare against local files
   publish                     click 发布
   check-published TITLE       confirm it landed in 已发布 on the note manager
+  delete-note --id N --yes    delete one note by noteId (scheduled ones included)
   shot     [--out PATH]       screenshot Chrome (for showing the user)
 
 Exit codes: 0 ok, 1 failed check, 2 environment/permission problem.
@@ -146,6 +147,47 @@ READBACK_JS = """JSON.stringify({
   url: location.href
 })""" % (json.dumps(TITLE_SEL), json.dumps(EDITOR_SEL),
          json.dumps(PREVIEW_SEL))
+
+
+# 笔记管理页的每张卡把 noteId 藏在 data-impression 的 JSON 里——这是唯一稳定的
+# 定位手段：标题会重复（同一条笔记替换后会短暂共存两份），顺序也会变。
+NOTE_CARDS_JS = """(() => {
+  const out = [];
+  for (const c of document.querySelectorAll('.note-card')) {
+    let id = '';
+    try {
+      id = JSON.parse(c.getAttribute('data-impression') || '{}')
+             .noteTarget.value.noteId;
+    } catch (e) {}
+    out.push({id: id, text: (c.textContent || '').replace(/\\s+/g, ' ').trim()});
+  }
+  return JSON.stringify(out);
+})()"""
+
+# 删除确认弹窗在 Vue portal 里，而且**关闭后仍留在 DOM**（走 opacity 淡出），
+# 所以要能认出"这次真的弹出来了"。注意：不能用 offsetParent 判可见——这个
+# 容器是 position:fixed，offsetParent 恒为 null，用它判会永远跳过弹窗。
+# 确认按钮是 .confirm-button；只靠 button.click() 在这套组件上不稳，实测
+# 要点到真鼠标坐标才吃得准。
+VISIBLE_FN_JS = """const visible = (el) => {
+  if (!el.getClientRects().length) return false;
+  const s = getComputedStyle(el);
+  return s.visibility !== 'hidden' && parseFloat(s.opacity || '1') > 0.05;
+};"""
+
+DELETE_MODAL_JS = ("(() => {" + VISIBLE_FN_JS + """
+  for (const m of document.querySelectorAll('.d-modal.modal-container')) {
+    if (!visible(m)) continue;
+    const btn = m.querySelector('button.confirm-button');
+    if (!btn) continue;
+    const r = btn.getBoundingClientRect();
+    if (r.width <= 0 || r.height <= 0) continue;
+    return JSON.stringify({
+      text: (m.innerText || '').replace(/\\s+/g, ' ').trim().slice(0, 120),
+      x: r.left + r.width / 2, y: r.top + r.height / 2});
+  }
+  return '{}';
+})()""")
 
 
 def die(msg: str, code: int = 2):
@@ -762,6 +804,94 @@ def cmd_check_published(args) -> int:
     return 0
 
 
+def cmd_delete_note(args) -> int:
+    """按 noteId 删掉一条笔记（定时未发的也算）。
+
+    平台把删除确认放进 Vue portal：弹窗**关闭后仍留在 DOM**（淡出），且容器是
+    position:fixed（offsetParent 恒为 null，不能拿它判可见）。判定"这次真的弹出来了"
+    用 VISIBLE_FN_JS。定位只认 noteId：标题会重复（替换时新旧会短暂共存），列表顺序也会变。
+    """
+    page, _ = bridge()
+    note_id = (args.id or "").strip()
+    if not note_id:
+        die("--id 不能为空")
+
+    page.navigate(NOTE_MANAGER_URL)
+    time.sleep(6)
+
+    cards: list = []
+    for _ in range(20):
+        cards = json.loads(page.evaluate(NOTE_CARDS_JS))
+        if cards:
+            break
+        time.sleep(0.5)
+    hit = next((c for c in cards if c["id"] == note_id), None)
+    if not hit:
+        die(f"笔记管理里找不到 noteId={note_id}（当前扫到 {len(cards)} 张卡）")
+
+    label = hit["text"][:60]
+    if args.title and args.title not in hit["text"]:
+        die(f"标题不符：noteId={note_id} 的卡是「{label}」，不含 {args.title!r}"
+            "——防误删已停下")
+    print(f"目标：{label}")
+
+    if not args.yes:
+        print("删除不可恢复。核对无误后加 --yes 重跑。", file=sys.stderr)
+        return 1
+
+    # 先关掉可能残留的旧弹窗，免得下一步点到别的笔记的「确定」。
+    page.evaluate("(() => {" + VISIBLE_FN_JS + """
+      for (const m of document.querySelectorAll('.d-modal.modal-container')) {
+        if (!visible(m)) continue;
+        for (const b of m.querySelectorAll('button')) {
+          if ((b.textContent || '').trim() === '取消') { b.click(); return; }
+        }
+      }
+    })()""")
+    time.sleep(1)
+
+    clicked = page.evaluate("""(() => {
+      for (const c of document.querySelectorAll('.note-card')) {
+        let id = '';
+        try {
+          id = JSON.parse(c.getAttribute('data-impression') || '{}')
+                 .noteTarget.value.noteId;
+        } catch (e) {}
+        if (id !== %s) continue;
+        const b = c.querySelector('.note-card__action-btn--del');
+        if (!b) return 'no-del-btn';
+        b.click();
+        return 'clicked';
+      }
+      return 'no-card';
+    })()""" % json.dumps(note_id))
+    if clicked != "clicked":
+        die(f"删除按钮没点上：{clicked}")
+
+    # 弹窗是异步挂上来的：要轮询等它可见，点完立刻找会扑空。
+    info: dict = {}
+    for _ in range(24):
+        time.sleep(0.5)
+        info = json.loads(page.evaluate(DELETE_MODAL_JS))
+        if info:
+            break
+    if not info:
+        die("删除确认弹窗没出现（.confirm-button 不可见）——页面可能改版")
+    if "删除" not in info["text"]:
+        die(f"弹窗文案不像删除确认，已停下：{info['text']!r}")
+
+    # `.click()` 在这套组件上不稳，按真鼠标坐标点。
+    page.mouse_click(info["x"], info["y"])
+    time.sleep(2)
+    for _ in range(20):
+        time.sleep(0.5)
+        ids = [c["id"] for c in json.loads(page.evaluate(NOTE_CARDS_JS))]
+        if note_id not in ids:
+            print(f"已删除 {note_id}（列表剩 {len(ids)} 张卡，已无此 id）")
+            return 0
+    die(f"点了确认但 {note_id} 仍在列表里——去页面手动看一眼，先别重复点")
+
+
 def cmd_shot(args) -> int:
     if sys.platform != "darwin":
         die("shot 目前只支持 macOS")
@@ -824,6 +954,12 @@ def main() -> int:
     p = sub.add_parser("check-published", help="确认已发布")
     p.add_argument("title")
     p.set_defaults(fn=cmd_check_published)
+
+    p = sub.add_parser("delete-note", help="按 noteId 删除一条笔记（不可恢复）")
+    p.add_argument("--id", required=True, help="要删除的笔记 noteId")
+    p.add_argument("--title", default=None, help="可选：断言卡片标题含此串，防误删")
+    p.add_argument("--yes", action="store_true", help="确认删除（不加只报告目标）")
+    p.set_defaults(fn=cmd_delete_note)
 
     p = sub.add_parser("shot", help="给用户看截图（macOS）")
     p.add_argument("--out", default="/tmp/xhs-shot.png")

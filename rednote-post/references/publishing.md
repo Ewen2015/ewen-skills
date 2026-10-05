@@ -223,6 +223,48 @@ DOM 里停留一会儿，期间**所有鼠标点击都被它吃掉**——这时
 
 然后再去 `new/note-manager` 看**已发布**列表里有没有它、**审核中**里有没有它。
 
+## 改稿后换掉一条已经排期的笔记
+
+排期之后才发现文案/卡片要改（R23 就是这种情况），**只能删掉重发**——小红书没有
+"编辑已定时笔记"的开放路径，直接再发一条会对同一时刻挂出两条同名笔记。
+
+```bash
+# 1. 重渲染，确认布局检查全绿
+python3 scripts/render_cards.py <post-dir>
+# 2. 重新填表并定时（用同一天的同一个时刻）
+scripts/xhs.py reset && scripts/xhs.py fill --dir <post-dir> --collection 司马读书
+scripts/xhs.py verify --dir <post-dir> --collection 司马读书
+scripts/xhs.py original && scripts/xhs.py schedule "YYYY-MM-DD HH:MM"
+scripts/xhs.py publish
+# 3. 删掉旧的那条（先不加 --yes 看目标对不对）
+scripts/xhs.py delete-note --id <旧 noteId>
+scripts/xhs.py delete-note --id <旧 noteId> --title "<标题>" --yes
+```
+
+先发新的、再删旧的：中间不会有"两边都没有"的空窗，万一新的一条填表失败，
+旧的排期还在。
+
+### `delete-note` 为什么长这样
+
+- **只认 noteId**。标题会重复（新旧的标题一模一样），列表顺序也会变。
+  noteId 藏在每张卡 `data-impression` 的 JSON 里：`noteTarget.value.noteId`。
+- **不能用 `offsetParent` 判弹窗可见**。删除确认弹窗是 `position: fixed`，
+  `offsetParent` 恒为 `null`，用它判会永远跳过弹窗、然后报"弹窗没出现"。
+  要用 `getClientRects().length` + 计算样式里的 `visibility/opacity`。
+- **弹窗关掉之后仍然留在 DOM 里**（淡出）。所以每次都要重新判"这一次真的弹出来了"，
+  否则会点到上一次弹窗的残骸。
+- **确认按钮用真鼠标点**。`button.click()` 在这套组件上不稳；
+  按 `getBoundingClientRect()` 的中心坐标 `mouse_click` 才吃得准。
+- 命令自带二次确认：不加 `--yes` 只打印目标并返回 1；`--title` 可再断言一次标题，
+  防手滑填错 noteId。
+
+### 定时窗口可能有上限（未复核）
+
+观察（2026-10-05）：把一条测试笔记定时到 **15 天后**（`2026-10-20 22:00`），
+表单回读正常，但提交后笔记卡片回显的是**提交时刻**（`09:57`），不是 `10-20 22:00`，
+疑似超出平台定时窗口被静默退回成立即发布。日常日更只排 1–3 天，不受影响。
+**要排更远时，提交后必须回 `note-manager` 回读卡片上的时间**，确认它等于你设的时刻。
+
 ## 给用户看截图（macOS）
 
 扩展自带的 `screenshot_element` 需要 `<all_urls>` 或 `activeTab` 权限，通常会报
