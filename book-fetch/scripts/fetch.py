@@ -605,13 +605,102 @@ def print_queue(items: list[dict]) -> None:
     print(f"\n→ {QUEUE_MD}")
 
 
+# 受 macOS TCC 保护的子树。进程没拿到「完全磁盘访问权限」时，这些位置下的文件
+# 读内容一定失败（stat 有时还能过，open 直接 PermissionError）。
+# 判定在这里只是**给动作**，不移动、不改名——和 R18 的 preflight 一个路数。
+PROTECTED_TREES = (
+    "Library/Mobile Documents",       # iCloud Drive（com~apple~CloudDocs 就在下面）
+    "Library/Containers",             # app 沙盒容器（Books 的电子书在这里）
+    "Library/Group Containers",
+    "Library/Safari",
+    "Library/Mail",
+    "Library/Messages",
+    "Pictures/Photos Library.photoslibrary",
+)
+
+
+def _protection_scope(path: Path) -> str | None:
+    try:
+        rel = path.resolve().relative_to(HOME).as_posix()
+    except (ValueError, OSError):
+        return None
+    for tree in PROTECTED_TREES:
+        if rel == tree or rel.startswith(tree + "/"):
+            return tree
+    return None
+
+
+def cmd_check_source(args) -> int:
+    """交书入口的前置检查：这个路径现在读得到吗？只报告，不动文件。"""
+    p = Path(os.path.expanduser(args.path))
+    print(f"路径：{p}")
+    try:
+        exists = p.exists()
+    except OSError as e:
+        print(f"连 stat 都被拒：{e}")
+        exists = False
+    if not exists:
+        print("不存在 ✗")
+        return 1
+    if p.is_dir():
+        print("这是个目录不是文件 ✗（epub/pdf 要指到具体文件）")
+        return 1
+
+    scope = _protection_scope(p)
+    try:
+        size = p.stat().st_size
+    except OSError as e:
+        print(f"拿不到大小 ✗（{e}）")
+        return 1
+    print(f"存在 ✓  大小 {size / 1024 / 1024:.2f} MB")
+    if size == 0:
+        print("大小是 0 ✗——多半只是 iCloud 占位符，正文没落到本地\n"
+              "  → 在 Finder 里打开它一次，或右键「立即下载」，再重跑")
+        return 1
+
+    try:
+        with open(p, "rb") as f:
+            head = f.read(4)
+    except PermissionError:
+        print("内容读不到 ✗（PermissionError）")
+        if scope:
+            print(f"  它落在受 TCC 保护的子树：~/{scope}\n"
+                  "  不是路径写错了，是 macOS 不让当前进程读。两条修复动作：\n"
+                  "  ① 最省事：Finder 里把它拖到不受保护的目录（本流程用 ~/Documents/books），再重跑；\n"
+                  "  ② 一劳永逸：系统设置 → 隐私与安全性 → 完全磁盘访问权限，"
+                  "给「正在跑这个 agent 的那个 app」打勾（不是给 Terminal），然后完全退出并重开它。")
+        else:
+            print("  它不在已知的保护子树里，更像权限位 / ACL 的问题。先看一眼：\n"
+                  f"    ls -l@ '{p}'        # 每一位还有没有 r？有没有 deny 的 ACL\n"
+                  "  补回读权限，或者复制一份到别处再重跑。")
+        return 1
+    except OSError as e:
+        print(f"内容读不到 ✗（{e}）")
+        return 1
+
+    if head[:2] == b"PK":
+        kind = "zip/epub ✓"
+    elif head[:4] == b"%PDF":
+        kind = "pdf ✓"
+    else:
+        kind = f"既不是 zip 也不是 pdf（magic={head!r}）——确认一下格式"
+    print(f"内容可读 ✓  {kind}")
+    if scope:
+        print(f"注意：它在受保护子树 ~/ {scope} 下。现在读得到，换个进程/换台机器可能就读不到；"
+              "建议挪到 ~/Documents/books 再进流程。")
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="book-fetch：找书、评分、确认、下载、登记队列")
     sub = ap.add_subparsers(dest="cmd", required=True)
 
     p = sub.add_parser("search", help="调用外部适配器找候选")
-    p.add_argument("query")
     p.set_defaults(fn=cmd_search)
+
+    p = sub.add_parser("check-source", help="交书入口的前置检查：这个路径读得到吗（只报告）")
+    p.add_argument("--path", required=True, help="用户交来的 epub/pdf 路径")
+    p.set_defaults(fn=cmd_check_source)
 
     p = sub.add_parser("shortlist", help="剔除李鬼、打分、解析封面与书目")
     p.add_argument("--file", help="用指定的搜索结果文件，默认用最近一次")

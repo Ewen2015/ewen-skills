@@ -49,6 +49,23 @@ JSON
 
 ## 四步
 
+### 0. 用户直接交来一个文件时（不走搜索）
+
+用户把 epub/pdf 直接丢过来（常见位置是 iCloud Drive、Books 容器）——**先验可达性**：
+
+```bash
+python3 <skill>/scripts/fetch.py check-source --path "<路径>"
+```
+
+`~/Library/Mobile Documents`（iCloud Drive）、`~/Library/Containers`（Books 的电子书）等
+都在 macOS 的 TCC 保护范围里。进程没拿到「完全磁盘访问权限」时**读不到内容**，
+而 `ls` / `cp` / `ditto` / `osascript` 会**全部失败**——现场挨个试只是白烧轮次。
+
+- 报 `Operation not permitted` 且 `check-source` 指出某棵保护子树 = TCC，不是路径写错。
+  两条修复：① 拖到 `~/Documents/books`；② 给**正在跑 agent 的那个 app**
+  （不是 Terminal）开完全磁盘访问权限，然后完全退出并重开它。
+- `check-source` **只报告，不移动、不改名、不复制**。和 `download` 的 preflight 一个路数。
+
 ### 1. 找候选
 
 ```bash

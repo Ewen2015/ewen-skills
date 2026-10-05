@@ -603,4 +603,45 @@ reset/fill/verify/original/schedule/publish，没有 delete / unschedule / edit�
 
 ---
 
+### R26 · 交书入口要先验路径可达性（TCC / iCloud Drive）
+
+状态：adopted
+记录：2026-10-05
+维度：工程 · 取书（S1）
+
+**证据（用户介入，证据等级最高）**：2026-10-05 用户把《俞军产品方法论》的 epub 路径交进来，
+路径在 iCloud Drive（`~/Library/Mobile Documents/com~apple~CloudDocs/Downloads/…`）。
+进程读不到内容——`ls` / `cp` / `ditto` / `osascript`(Finder) **四种方式全部**
+`Operation not permitted`，并伴随 `sandbox_extension_issue_file failed`。
+现场挨个试这四种白烧了四轮，最后**用户自己**把文件拖到 `~/Documents/books/` 才解开。
+这是 S1（取书）上的**第四种**外部依赖，前三种见 R18（登录态、代理、TLS）。
+
+**假设**：S1 的失败有相当一部分不是"书没有"，而是"输入路径在当前进程下不可达，而没人先验"。
+把可达性做成一条**只报告**的检查，下次不用挨个试命令、也不用临场判断是不是路径写错了。
+
+**最小试验（已做）**：给 `book-fetch` 加 `fetch.py check-source --path <p>`，只报告不动文件。
+用四个真路径验：
+- iCloud Drive 里的真实文件（`…/com~apple~CloudDocs/.DS_Store`）→ 判定
+  `~/Library/Mobile Documents` 保护子树 + 给两条修复动作，exit 1 ✅
+- `~/Library/Safari/Bookmarks.plist` → 认得另一棵树，同样给出修复动作 ✅
+- 已在 `~/Documents/books` 的 epub → `内容可读 ✓ zip/epub ✓`，exit 0 ✅
+- 不存在的路径 → `不存在 ✗`，exit 1 ✅
+
+试验中另修掉一个误报：**chmod 000 的文件也会抛 PermissionError**，第一版会错怪 TCC；
+现在按"在不在保护子树里"分流，非保护目录给 `ls -l@` 的排查动作。
+
+**落地**：`book-fetch/scripts/fetch.py`（`check-source` 子命令 + `PROTECTED_TREES`）；
+`book-fetch/SKILL.md` 新增「### 0. 用户直接交来一个文件时（不走搜索）」；
+`rsi-reading/references/loop-map.md` 的 S1/S2/S3 计数从 4 更正到 5，S1 补上
+「用户直接交文件」这个入口。
+
+**验收**：下一次用户交来受保护目录里的书，**一条 `check-source` 就定位到 TCC**，
+不再出现 ls / cp / ditto / osascript 挨个试。
+
+**观察**：样本不足（n=1，且是事后补的），保留观察。
+同一入口还有第二个症状——交进来的文件名带着来源后缀（`clean_filename` 只在 `download` 里跑，
+外部交进来的不经过它）。本轮**没动**，留作下一个候选，避免一次改两处。
+
+---
+
 （更早的条目走完「最小试验 → 验收」后移到这里，附上日期和观察到的变化。）
