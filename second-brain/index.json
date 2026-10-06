@@ -1,9 +1,10 @@
 {
  "version": 1,
- "count": 10,
+ "count": 11,
  "dimensions": {
   "尺度": [
-   "pale-blue-dot"
+   "pale-blue-dot",
+   "reflection-and-history"
   ],
   "假两难": [
    "blue-ocean-strategy",
@@ -42,7 +43,8 @@
    "yujun-product-methodology"
   ],
   "意会与不可言说": [
-   "knowing-and-being"
+   "knowing-and-being",
+   "reflection-and-history"
   ],
   "焦点与附带": [
    "knowing-and-being",
@@ -69,6 +71,7 @@
   "地图与疆域": [
    "blue-ocean-strategy",
    "cost-and-choice",
+   "reflection-and-history",
    "thinking-in-models",
    "yujun-product-methodology"
   ],
@@ -87,6 +90,7 @@
    "yujun-product-methodology"
   ],
   "身份与角色": [
+   "reflection-and-history",
    "smart-mans-training",
    "the-creative-act"
   ],
@@ -98,7 +102,8 @@
   ],
   "传统与共识": [
    "blue-ocean-strategy",
-   "knowing-and-being"
+   "knowing-and-being",
+   "reflection-and-history"
   ]
  },
  "books": {
@@ -559,6 +564,79 @@
    "card": "prisoners-of-our-thoughts.md",
    "weight": 0,
    "card_tokens_est": 2334
+  },
+  "reflection-and-history": {
+   "title": "反思史学与史学反思：文本与表征分析",
+   "author": "王明珂",
+   "editor": [],
+   "lens": "这个说法是在什么处境下、被谁、按什么格式写出来的？它让谁待在中心、让谁待在边缘？",
+   "thesis": "我们看见的「历史」不是过去发生的事，而是在特定社会情境下被写出来、被记住、又反过来支撑那个社会现实的一层表相——该读的不是它的真假，是它的生成处境。",
+   "dimensions": [
+    "地图与疆域",
+    "传统与共识",
+    "身份与角色",
+    "意会与不可言说",
+    "尺度"
+   ],
+   "triggers": [
+    "这是不是真的",
+    "我看到的只是表象",
+    "表面现象",
+    "被写下来的",
+    "谁在叙述",
+    "谁写的",
+    "谁说的",
+    "叙事",
+    "官方说法",
+    "主流说法",
+    "大家都这么说",
+    "教科书上说的",
+    "书上都这么说",
+    "从小听到的说法",
+    "自古以来",
+    "历史",
+    "史书",
+    "正史",
+    "方志",
+    "家谱",
+    "族谱",
+    "祖先",
+    "传说",
+    "神话",
+    "民族",
+    "少数民族",
+    "我是谁",
+    "认同",
+    "归属",
+    "边缘",
+    "主流",
+    "中心",
+    "王明珂",
+    "华夏边缘",
+    "羌族",
+    "表相",
+    "本相",
+    "表征",
+    "文类",
+    "历史心性",
+    "社会记忆",
+    "集体记忆",
+    "根基历史"
+   ],
+   "domains": [
+    "史学",
+    "人类学",
+    "社会学",
+    "方法论",
+    "族群认同"
+   ],
+   "source_type": "一手理论——作者自己提出并命名了「反思史学」这套方法，且几乎所有例证来自他本人 1990 年代在川西岷江上游的田野",
+   "source_warning": "它是方法论著作，不是史学著作——书里对「真正发生过什么」几乎不下判断，作者自己也明确说不能肯定羌族的弟兄祖先历史「从未发生」，也不能肯定箕子王朝鲜「是虚构的」。要警惕的不是它的谦虚，而是它外推到宏观那一步：文本分析部分（第四至八章前半）有大量一手材料，「人类生态」的宏观论断（如把中东难民潮、ISIS 称作「欧亚大陆西半部极不均衡的人类生态体系下的表征」）只有一句话，与全书「用材料说话」的自我要求不一致。另，第九章「反思性中国人认同」是立场声明，不是从前面论证推出来的。",
+   "read_at": "2026-10-06",
+   "notes": "notes/reflection-and-history.md",
+   "card": "reflection-and-history.md",
+   "weight": 0,
+   "card_tokens_est": 3075
   },
   "smart-mans-training": {
    "title": "聪明人的训练",

@@ -10,9 +10,9 @@
 - 用法：读这张表 → 挑 2–4 个维度 → `python3 scripts/brain.py recall --dim <维度>` 取书
   → 只读那 1–2 张卡。
 
-## 尺度（1 本）
+## 尺度（2 本）
 把问题放到更大的坐标里再看，判断会变。
-pale-blue-dot
+reflection-and-history · pale-blue-dot
 
 ## 假两难（3 本）
 先问这是不是真取舍，还是被自己设成了二选一。
@@ -54,9 +54,9 @@ blue-ocean-strategy · naval-almanack
 这份本事能不能被培训出来——能被培训，就能被取代。
 naval-almanack · yujun-product-methodology
 
-## 意会与不可言说（1 本）
+## 意会与不可言说（2 本）
 有些判断说不清但确实知道，写成条目反而失真。
-knowing-and-being
+reflection-and-history · knowing-and-being
 
 ## 焦点与附带（2 本）
 把平时不当回事的东西硬拽到焦点上，判断会被破坏。
@@ -78,9 +78,9 @@ smart-mans-training · naval-almanack · prisoners-of-our-thoughts
 分清怀疑的是这件事，还是怀疑自己。
 smart-mans-training · the-creative-act
 
-## 地图与疆域（4 本）
+## 地图与疆域（5 本）
 报表、职级、简历都是地图，不是现实本身。
-cost-and-choice · blue-ocean-strategy · yujun-product-methodology · thinking-in-models
+cost-and-choice · reflection-and-history · blue-ocean-strategy · yujun-product-methodology · …另有 1 本，用 --dim 地图与疆域 取
 
 ## 自尊与自我修正（3 本）
 挡住改主意的往往不是无知，是自尊。
@@ -94,9 +94,9 @@ blue-ocean-strategy · thinking-in-models
 选它放弃了什么——不做的代价也要算。
 cost-and-choice · smart-mans-training · yujun-product-methodology
 
-## 身份与角色（2 本）
+## 身份与角色（3 本）
 这个选择在回答"我是谁"。
-smart-mans-training · the-creative-act
+reflection-and-history · smart-mans-training · the-creative-act
 
 ## 完成与发布（1 本）
 什么时候算做完，以及发出去要付的代价。
@@ -106,6 +106,6 @@ the-creative-act
 整体不等于零件之和，拆开就看不见了。
 knowing-and-being
 
-## 传统与共识（2 本）
+## 传统与共识（3 本）
 共识怎么形成，又怎么被合理地推翻。
-blue-ocean-strategy · knowing-and-being
+reflection-and-history · blue-ocean-strategy · knowing-and-being
