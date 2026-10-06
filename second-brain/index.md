@@ -30,9 +30,9 @@ thinking-in-models
 为不可逆的事留容错空间。
 thinking-in-models
 
-## 风险转移（1 本）
+## 风险转移（2 本）
 善意的干预会把一种风险换成另一种，先说清换成了哪种。
-pale-blue-dot
+cost-and-choice · pale-blue-dot
 
 ## 时间与复利（1 本）
 什么会随时间累积，什么会随时间折旧。
@@ -62,9 +62,9 @@ knowing-and-being
 把平时不当回事的东西硬拽到焦点上，判断会被破坏。
 prisoners-of-our-thoughts · knowing-and-being
 
-## 自治与被计划（2 本）
+## 自治与被计划（3 本）
 谁在定目标——被安排的活和自己的主动性，产出机制不同。
-smart-mans-training · knowing-and-being
+cost-and-choice · smart-mans-training · knowing-and-being
 
 ## 意义自赋（2 本）
 意义不是被赐予的，是人自己保管的，所以责任更重而不是更轻。
@@ -78,21 +78,21 @@ smart-mans-training · naval-almanack · prisoners-of-our-thoughts
 分清怀疑的是这件事，还是怀疑自己。
 smart-mans-training · the-creative-act
 
-## 地图与疆域（3 本）
+## 地图与疆域（4 本）
 报表、职级、简历都是地图，不是现实本身。
-blue-ocean-strategy · yujun-product-methodology · thinking-in-models
+cost-and-choice · blue-ocean-strategy · yujun-product-methodology · thinking-in-models
 
-## 自尊与自我修正（2 本）
+## 自尊与自我修正（3 本）
 挡住改主意的往往不是无知，是自尊。
-prisoners-of-our-thoughts · thinking-in-models
+cost-and-choice · prisoners-of-our-thoughts · thinking-in-models
 
 ## 概率与随机（2 本）
 分清运气和本事，别把均值回归当成趋势。
 blue-ocean-strategy · thinking-in-models
 
-## 代价与机会成本（2 本）
+## 代价与机会成本（3 本）
 选它放弃了什么——不做的代价也要算。
-smart-mans-training · yujun-product-methodology
+cost-and-choice · smart-mans-training · yujun-product-methodology
 
 ## 身份与角色（2 本）
 这个选择在回答"我是谁"。

@@ -1,6 +1,6 @@
 {
  "version": 1,
- "count": 9,
+ "count": 10,
  "dimensions": {
   "尺度": [
    "pale-blue-dot"
@@ -21,6 +21,7 @@
    "thinking-in-models"
   ],
   "风险转移": [
+   "cost-and-choice",
    "pale-blue-dot"
   ],
   "时间与复利": [
@@ -48,6 +49,7 @@
    "prisoners-of-our-thoughts"
   ],
   "自治与被计划": [
+   "cost-and-choice",
    "knowing-and-being",
    "smart-mans-training"
   ],
@@ -66,10 +68,12 @@
   ],
   "地图与疆域": [
    "blue-ocean-strategy",
+   "cost-and-choice",
    "thinking-in-models",
    "yujun-product-methodology"
   ],
   "自尊与自我修正": [
+   "cost-and-choice",
    "prisoners-of-our-thoughts",
    "thinking-in-models"
   ],
@@ -78,6 +82,7 @@
    "thinking-in-models"
   ],
   "代价与机会成本": [
+   "cost-and-choice",
    "smart-mans-training",
    "yujun-product-methodology"
   ],
@@ -186,6 +191,84 @@
    "card": "blue-ocean-strategy.md",
    "weight": 0,
    "card_tokens_est": 2132
+  },
+  "cost-and-choice": {
+   "title": "成本与选择",
+   "author": "詹姆斯·M. 布坎南（James M. Buchanan）",
+   "editor": [],
+   "lens": "这个\"成本\"，是决策那一刻谁在心里放弃掉的东西，还是事后账本上的一个数字？承担代价的人，和做选择的人，是不是同一个？",
+   "thesis": "影响行为的成本只存在于决策的那一刻、只存在于决策者自己的评价里；一切能被客观度量、能被记账、能拿到事后去比较的\"成本\"，都是选择的结果而不是选择的原因——把这两者混起来，是经济学一半错误的源头。",
+   "dimensions": [
+    "代价与机会成本",
+    "地图与疆域",
+    "风险转移",
+    "自尊与自我修正",
+    "自治与被计划"
+   ],
+   "triggers": [
+    "沉没成本",
+    "已经投入这么多",
+    "舍不得",
+    "不甘心放手",
+    "放弃了什么",
+    "机会成本",
+    "值不值",
+    "划不划算",
+    "这笔账怎么算",
+    "成本",
+    "代价",
+    "谁承担",
+    "转嫁",
+    "外部性",
+    "副作用",
+    "殃及别人",
+    "干净空气",
+    "修路",
+    "公共项目",
+    "成本收益分析",
+    "纳税",
+    "税收",
+    "公债",
+    "赤字",
+    "官僚",
+    "效率",
+    "计划经济",
+    "定指标",
+    "KPI",
+    "考核",
+    "激励",
+    "预算",
+    "布坎南",
+    "公共选择",
+    "奥地利学派",
+    "伦敦学派",
+    "主观主义",
+    "庇古",
+    "福利经济学",
+    "科斯",
+    "哈耶克",
+    "米塞斯",
+    "奈特",
+    "社会主义计算",
+    "经济计算",
+    "准租",
+    "选择影响的成本",
+    "影响选择的成本"
+   ],
+   "domains": [
+    "经济学",
+    "方法论",
+    "公共选择",
+    "奥地利学派",
+    "制度"
+   ],
+   "source_type": "一手理论——作者自己建立并命名了那组成本概念；概念分析，不是经验研究",
+   "source_warning": "它是概念分析，所以\"没有数据\"不是缺陷（命题是\"这两个词指的不是一件事\"，靠反例检验）；但要警惕它外推的那一步——从\"客观成本不是机会成本\"推到\"社会成本这个概念可疑\"，这是立场不是论证。把主观主义推到底会让一切第三方评价（含成本—收益分析）失去落脚点，而作者只做概念澄清、不给替代方案。中译本多处校勘问题（\"庇古\"排成\"底古\"等），引用须回原书核对。",
+   "read_at": "2026-10-06",
+   "notes": "notes/cost-and-choice.md",
+   "card": "cost-and-choice.md",
+   "weight": 0,
+   "card_tokens_est": 2636
   },
   "knowing-and-being": {
    "title": "认知与存在：迈克尔·波兰尼文集",
