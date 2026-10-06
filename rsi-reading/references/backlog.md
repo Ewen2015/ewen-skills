@@ -1192,5 +1192,59 @@ R26/R27 把关的是"路径可达性"和"文件名清理"，`check-source` 也�
 
 ---
 
+### R40 · 状态扫描会**静悄悄少报**，并把"没读全"报成"读完了"
+
+状态：已修复（代码级 + 现场验收，附回归步骤）
+记录：2026-10-06
+维度：度量（S0／S3 之间的观测面）
+
+**证据（收尾时踩到）**：样本 #5 收尾扫定时队列，输出
+`cards_scanned: 10 / scroll_exhausted: true`，据此判定 **2026-10-07《纳瓦尔宝典》、
+2026-10-08《Pale Blue Dot》两篇已排期笔记从平台消失了**，并当成 🚩 报给用户。
+**用户回一句"已确认还在平台定时队列里"——整个结论反了。**
+
+这不是平台丢笔记，是本 skill 的观测面在说谎。**它污染的是整条闭环的输入**：
+排期缺口、覆盖率、要不要补一篇、最佳时段，全都建立在"看到的队列就是全部队列"之上。
+
+**根因（三层，缺一层都不会犯）**：
+1. 笔记管理是**虚拟滚动**，首屏只挂约 10 张，往下要靠滚动触发下一页请求。
+2. **滚动滚错了元素**：`page.scroll_to_bottom()` 滚的是 window，而 window 根本滚不动
+   （`scrollHeight == clientHeight`，实测全是 923）——真正的容器是 `.note-card` 的可滚动
+   祖先 `.list-container-box` / `.microapp-container`。所以滚动是**彻底的 no-op**。
+3. 于是"连续 3 次卡片数不变"被当成"列表到底"（`scroll_exhausted = true`）。
+   而**页面此时还挂着「正在加载」**——真正的原因是 Chrome 窗口不在前台
+   （`document.hasFocus() = false`，`outerHeight: 0`），**下一页请求压根没发出去**。
+
+现场取证（都做过了，可复现）：hook `fetch`/`XHR` 后反复滚动，**没有任何 `posted?page=1` 请求**；
+`visibilityState: visible` 但 `hasFocus: false`；等 64s 卡片数恒为 10；
+直接 `fetch` 列表 API 返回 `{"code":-1}`（缺签名头，此路不通）。
+
+**为什么危险**：它不报错、不缺字段，`scroll_exhausted: true` 看上去就是"扫全了"。
+**"少读"和"读完"在输出上完全同形。**
+
+**修复（已落地 `rednote-assistant`）**：
+- `SCROLL_JS` 改为滚 `.note-card` 的可滚动祖先（+ 派发 `scroll` 事件），不再依赖 window。
+- `scroll_and_collect` 返回三元组 `(卡片, exhausted, partial)`：**页面还显示「正在加载」时
+  一律不算 exhausted**；`partial` 单独报出来。
+- `scan_queue` 增加 `partial` / `expected_total`（从 tab 标签「全部 255」解析）/ `window_focused`；
+  拿到卡片数少于标签总数时也判 partial。
+- `emit` 在 stderr 打醒目警告（走 stderr 是为了不弄脏 stdout 的 JSON），
+  **并直接给出可执行的处理**："把 Chrome 切到前台重扫"。
+- `plan.py report` 的平台状态段会带出 ⚠️ 行，明确写"下面的缺口与覆盖率都不可信"。
+- `SKILL.md` 铁律 4/5 + `references/plan-schema.md` 新增「先确认它是'全部'，再拿它判断」。
+
+**回归测法**：把 Chrome 切到后台，跑 `xhs_state.py queue --max 60`，
+应看到 `scroll_exhausted: false`、`partial: true`、`expected_total: 255`，
+且 stderr 打出「Chrome 窗口不在前台」——**旧版这里输出的是 `scroll_exhausted: true` 且一片安静**。
+
+**还没解决的**：`hasFocus` 这条路我这边没法自己满足（`osascript` 激活 Chrome 后
+`document.hasFocus()` 仍是 false，窗口很可能被最小化或不在当前 Space）。
+**所以"切到前台后能不能真读全 255 篇"没验过**——这条留给下一次窗口可见时补验。
+若前台化之后仍然只出 10 张，就得走真正的解法：抓页面自己的带签名请求（hook 已写好）。
+
+**成本**：低（改动几十行），但**收益是止损**：它保住的是别把"漏读"当成"平台异动"再报一次。
+
+---
+
 ---
 （更早的条目走完「最小试验 → 验收」后移到这里，附上日期和观察到的变化。）

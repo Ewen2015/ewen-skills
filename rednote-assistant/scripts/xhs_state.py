@@ -71,6 +71,40 @@ TABS_JS = r"""(() => JSON.stringify(
   [...document.querySelectorAll('.tab-item')].map(e => (e.innerText || '').trim())
 ))()"""
 
+PAGE_JS = r"""(() => JSON.stringify({
+  loading: /正在加载|加载中/.test(document.body.innerText),
+  focused: document.hasFocus(),
+  visibility: document.visibilityState,
+  inner_height: window.innerHeight,
+  outer_height: window.outerHeight,
+}))()"""
+
+# 笔记列表是虚拟滚动的：首屏只挂约 10 张卡片，往下要靠滚动触发下一页。
+# 真正的滚动容器不是 window（window 的 scrollHeight == clientHeight，滚不动），
+# 而是 .note-card 的某个可滚动祖先（实测是 .list-container-box / .microapp-container）。
+SCROLL_JS = r"""(() => {
+  const scrollable = (e) => {
+    if (!e || !e.scrollHeight) return false;
+    const cs = getComputedStyle(e);
+    return /(auto|scroll)/.test(cs.overflowY) && e.scrollHeight > e.clientHeight + 4;
+  };
+  const found = [];
+  const push = (e) => { if (scrollable(e) && !found.includes(e)) found.push(e); };
+  let n = document.querySelector('.note-card');
+  while (n) { push(n); n = n.parentElement; }
+  ['.list-container-box', '.microapp-container', '.content', '.notes-container']
+    .forEach(sel => document.querySelectorAll(sel).forEach(push));
+  window.scrollTo(0, document.body.scrollHeight);
+  let moved = 0;
+  found.forEach(e => {
+    const before = e.scrollTop;
+    e.scrollTop = e.scrollHeight;
+    if (e.scrollTop !== before) moved += 1;
+    e.dispatchEvent(new Event('scroll', {bubbles: true}));
+  });
+  return JSON.stringify({scrollers: found.length, moved});
+})()"""
+
 CLICK_TAB_JS = r"""(() => {
   const want = %s;
   const t = [...document.querySelectorAll('.tab-item')]
@@ -171,34 +205,40 @@ def card_key(c: dict) -> str:
     return c.get("noteId") or f"{c.get('title')}|{c.get('time')}"
 
 
-def scroll_and_collect(page, limit: int, settle: int = 3) -> tuple[list[dict], bool]:
-    """滚动收集卡片，直到拿到 limit 张或连续 settle 次不再增长。
+def scroll_and_collect(page, limit: int,
+                       settle: int = 3) -> tuple[list[dict], bool, bool]:
+    """滚动收集卡片，返回 (卡片, exhausted, partial)。
 
-    列表是分页/懒加载的：一次只有 20 张左右，账号总篇数远大于此，
-    所以"只看到第一屏就下结论"是本脚本最容易犯的错。
+    exhausted 只该在"列表确实到底"时为真——**页面还挂着「正在加载」时绝不算到底**。
+    这个区别是拿 bug 换来的：列表是虚拟滚动的，首屏只挂约 10 张，往下要靠滚动
+    触发下一页请求；请求迟迟不发（Chrome 窗口在后台、`document.hasFocus()` 为 false
+    时很常见）卡片数就会一直不变。旧版把这种"不变"直接当成到底，
+    于是静悄悄少报还报平安——2026-10-06 就漏掉了 10-07、10-08 两篇已排期笔记，
+    同时输出 `scroll_exhausted: true`，据此得出的"排期有空档"结论整个是错的。
     """
     seen: dict[str, dict] = {}
     stale = 0
-    exhausted = False
+    settled = False
     while True:
         for c in cards_on_page(page):
             seen[card_key(c)] = c
         if len(seen) >= limit:
             break
         before = len(seen)
-        page.scroll_to_bottom()
+        page.evaluate(SCROLL_JS)
         time.sleep(1.5)
         for c in cards_on_page(page):
             seen[card_key(c)] = c
         if len(seen) == before:
             stale += 1
             if stale >= settle:
-                exhausted = True
+                settled = True
                 break
         else:
             stale = 0
+    partial = bool((jload(page.evaluate(PAGE_JS)) or {}).get("loading"))
     items = list(seen.values())
-    return items[:limit], exhausted
+    return items[:limit], (settled and not partial), partial
 
 
 def goto_note_manager(page) -> None:
@@ -211,14 +251,25 @@ def goto_note_manager(page) -> None:
     time.sleep(7)
 
 
-def scan_tab(page, tab: str, limit: int) -> tuple[list[dict], bool, list[str]]:
+def scan_tab(page, tab: str,
+             limit: int) -> tuple[list[dict], bool, bool, list[str]]:
     tabs = jload(page.evaluate(TABS_JS)) or []
     res = page.evaluate(CLICK_TAB_JS % json.dumps(tab))
     if res == "not-found":
-        return [], True, tabs
+        return [], True, False, tabs
     time.sleep(5)
-    items, exhausted = scroll_and_collect(page, limit)
-    return items, exhausted, tabs
+    items, exhausted, partial = scroll_and_collect(page, limit)
+    return items, exhausted, partial, tabs
+
+
+def expected_count(tabs: list[str], tab: str) -> int | None:
+    """tab 标签里写着总数（"全部 255"）。拿它当核对用的预期值。"""
+    for t in tabs:
+        if t.startswith(tab):
+            for token in t.split():
+                if token.isdigit():
+                    return int(token)
+    return None
 
 
 def scan_queue(page, limit: int) -> dict:
@@ -227,8 +278,8 @@ def scan_queue(page, limit: int) -> dict:
     定时笔记既在"全部"里，也在"审核中"里（还没到发布时间就一直是审核中），
     两个 tab 各扫一次才能同时拿到"有没有定时"和"是否卡审核"。
     """
-    all_cards, all_done, tabs = scan_tab(page, "全部", limit)
-    review_cards, _, _ = scan_tab(page, "审核中", limit)
+    all_cards, all_done, all_partial, tabs = scan_tab(page, "全部", limit)
+    review_cards, _, review_partial, _ = scan_tab(page, "审核中", limit)
     review_ids = {c["noteId"] for c in review_cards if c.get("noteId")}
 
     scheduled = []
@@ -244,6 +295,13 @@ def scan_queue(page, limit: int) -> dict:
     scheduled.sort(key=lambda x: x.get("time") or "")
 
     published_seen = [c for c in all_cards if not c.get("scheduled") and c.get("time")]
+    page_facts = jload(page.evaluate(PAGE_JS)) or {}
+    total = expected_count(tabs, "全部")
+    # 有两个独立的"数据不全"来源：列表还在加载，或者拿到的卡片数明显少于标签里的总数。
+    short = total is not None and total > len(all_cards) and len(all_cards) < limit
+    partial = all_partial or review_partial or short
+    if partial and len(all_cards) < limit and all_done:
+        all_done = False
     return {
         "tabs": tabs,
         "scheduled": scheduled,
@@ -252,6 +310,9 @@ def scan_queue(page, limit: int) -> dict:
                        "time": c.get("time")} for c in review_cards],
         "cards_scanned": len(all_cards),
         "scroll_exhausted": all_done,
+        "partial": partial,
+        "expected_total": total,
+        "window_focused": page_facts.get("focused"),
         "recent_unpublished": published_seen[0]["time"] if published_seen else None,
     }
 
@@ -288,7 +349,7 @@ def scan_drafts(page) -> dict:
 
 def scan_history(page, limit: int) -> dict:
     """已发布笔记的发布时间与五项数据，用来算账号自己的最佳时段。"""
-    cards, exhausted, _tabs = scan_tab(page, "已发布", limit)
+    cards, exhausted, partial, _tabs = scan_tab(page, "已发布", limit)
     rows = []
     for c in cards:
         stats = c.get("stats") or []
@@ -301,7 +362,7 @@ def scan_history(page, limit: int) -> dict:
     rows = [r for r in rows if r.get("time")]
     rows.sort(key=lambda r: r["time"], reverse=True)
     return {"published": rows, "cards_scanned": len(cards),
-            "scroll_exhausted": exhausted}
+            "scroll_exhausted": exhausted, "partial": partial}
 
 
 def stamp() -> str:
@@ -322,6 +383,31 @@ def emit(payload: dict, out: str | None) -> None:
                 print(f"  {k}: {json.dumps(v, ensure_ascii=False)[:120]}")
     else:
         print(text)
+    warn_incomplete(payload)
+
+
+def warn_incomplete(payload: dict) -> None:
+    """数据不全就大声说出来。
+
+    少报比报错危险得多：下游的"排期有空档""这里该补一篇"都建立在
+    "看到的队列就是全部队列"之上，静悄悄少报会直接得出错误结论。
+    警告走 stderr，免得弄脏 stdout 上的 JSON。
+    """
+    out = sys.stderr
+    for name in ("queue", "history"):
+        sec = payload.get(name)
+        if not isinstance(sec, dict) or not sec.get("partial"):
+            continue
+        print(f"\n⚠️  {name} 扫描不完整，不能据此判断排期是否有关档：", file=out)
+        print(f"    读到 {sec.get('cards_scanned')} 张卡片"
+              f"，列表标签显示共 {sec.get('expected_total')} 篇。", file=out)
+        if sec.get("window_focused") is False:
+            print("    原因：Chrome 窗口不在前台（document.hasFocus() = false），"
+                  "虚拟列表停发下一页请求。", file=out)
+            print("    处理：把 Chrome 切到前台、停在笔记管理页，再重跑一次。",
+                  file=out)
+        else:
+            print("    页面仍显示「正在加载」。把 Chrome 切到前台后重跑。", file=out)
 
 
 def main() -> int:

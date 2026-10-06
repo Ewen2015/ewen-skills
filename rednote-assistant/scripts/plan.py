@@ -409,6 +409,10 @@ def render_text(rep: dict) -> str:
     if rep.get("platform"):
         a("")
         a("## 平台状态")
+        if rep["platform"].get("partial"):
+            a(f"- ⚠️ **读到的队列不完整**（{rep['platform'].get('cards_scanned')} / "
+              f"{rep['platform'].get('expected_total')} 篇），下面的缺口与覆盖率"
+              f"都不可信，先把 Chrome 切到前台重扫 `xhs_state.py`。")
         a(f"- 定时发布队列：{rep['platform']['scheduled_count']} 篇")
         a(f"- 审核中：{rep['platform']['in_review_count']} 篇")
         dc = rep["platform"].get("draft_counts") or {}
@@ -588,10 +592,14 @@ def cmd_report(args) -> int:
                      reminder_advice(buffer_weeks, ppw, targets["ready_weeks"])),
     }
     if state:
+        q = state.get("queue") or {}
         rep["platform"] = {
             "scheduled_count": len(scheduled),
-            "in_review_count": ((state.get("queue") or {}).get("in_review_count") or 0),
+            "in_review_count": (q.get("in_review_count") or 0),
             "draft_counts": drafts.get("counts"),
+            "partial": bool(q.get("partial")),
+            "cards_scanned": q.get("cards_scanned"),
+            "expected_total": q.get("expected_total"),
         }
 
     if args.json:

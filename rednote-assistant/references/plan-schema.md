@@ -14,6 +14,26 @@
 `posts/` 下的目录直接沿用 `rednote-post` 的 post 目录约定
 （`manifest.json` / `title.txt` / `body.txt` / 成图），两个 skill 才能共用同一批文件。
 
+## state/queue.json：先确认它是"全部"，再拿它判断
+
+`xhs_state.py` 扫出来的队列是**唯一**的"平台上到底排了什么"的输入，
+所以它只要少读一篇，后面的"有没有空档""要不要补一篇"就全是错的。判断前先看这三个字段：
+
+| 字段 | 含义 |
+| --- | --- |
+| `scroll_exhausted` | **列表确实到底**才为 `true`。页面还挂着「正在加载」时一律为 `false` |
+| `partial` | `true` = 这份扫描不完整，**不能**据此判断排期 |
+| `expected_total` | 从 tab 标签读到的总数（如「全部 255」），用来和 `cards_scanned` 对账 |
+
+**`partial: true` 时不要输出任何缺口结论**，先按提示把 Chrome 切到前台重扫。
+
+笔记列表是虚拟滚动的：首屏只挂约 10 张，往下要靠滚动触发下一页。
+而**这个请求在 Chrome 窗口不在前台时根本不发**（`document.hasFocus()` 为 `false`），
+卡片数会一直不变——很容易被误读成"列表到底了"。
+2026-10-06 就是这么漏掉 10-07、10-08 两篇已排期笔记、还报了个 `scroll_exhausted: true` 的。
+另一条老坑：真正的滚动容器不是 window（window 的 `scrollHeight == clientHeight`，滚不动），
+是 `.note-card` 的可滚动祖先（`.list-container-box` / `.microapp-container`）。
+
 ## plan.json
 
 ```json
