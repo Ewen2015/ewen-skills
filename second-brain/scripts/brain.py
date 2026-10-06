@@ -427,8 +427,12 @@ def _route_books(hit_dims, idx: dict, q: str, top: int):
         if bonus:
             scores[slug] = scores.get(slug, 0.0) + bonus
             trig.add(slug)
-    ranked = sorted(scores.items(),
-                    key=lambda kv: (-kv[1], -idx["books"].get(kv[0], {}).get("weight", 0), kv[0]))[:top]
+    # 同分同 weight 时按读完日期近的在前（与 index.md 的代表位规则一致），
+    # 再用 slug 兜底保证顺序确定。稳定排序：先 slug，再日期，最后分/weight。
+    items = sorted(scores.items(), key=lambda kv: kv[0])
+    items.sort(key=lambda kv: idx["books"].get(kv[0], {}).get("read_at") or "", reverse=True)
+    ranked = sorted(items,
+                    key=lambda kv: (-kv[1], -idx["books"].get(kv[0], {}).get("weight", 0)))[:top]
     return ranked, dims_of, trig
 
 

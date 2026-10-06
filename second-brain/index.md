@@ -18,13 +18,13 @@ analysis-and-thinking · historical-regimes · reflection-and-history · pale-bl
 先问这是不是真取舍，还是被自己设成了二选一。
 blue-ocean-strategy · pale-blue-dot · yujun-product-methodology
 
-## 二阶效应（3 本）
+## 二阶效应（4 本）
 结果背后的结果，不假装连锁反应不存在。
-analysis-and-thinking · prisoners-of-our-thoughts · thinking-in-models
+analysis-and-thinking · the-book-of-elon · prisoners-of-our-thoughts · thinking-in-models
 
-## 最弱环节（2 本）
+## 最弱环节（3 本）
 乘法系统里，一项归零会把其余全部吃掉。
-analysis-and-thinking · thinking-in-models
+analysis-and-thinking · the-book-of-elon · thinking-in-models
 
 ## 安全边际（1 本）
 为不可逆的事留容错空间。
@@ -82,17 +82,17 @@ discourse-on-method · smart-mans-training · the-creative-act
 报表、职级、简历都是地图，不是现实本身。
 analysis-and-thinking · cost-and-choice · reflection-and-history · blue-ocean-strategy · …另有 2 本，用 --dim 地图与疆域 取
 
-## 自尊与自我修正（3 本）
+## 自尊与自我修正（4 本）
 挡住改主意的往往不是无知，是自尊。
-cost-and-choice · prisoners-of-our-thoughts · thinking-in-models
+the-book-of-elon · cost-and-choice · prisoners-of-our-thoughts · thinking-in-models
 
 ## 概率与随机（2 本）
 分清运气和本事，别把均值回归当成趋势。
 blue-ocean-strategy · thinking-in-models
 
-## 代价与机会成本（4 本）
-选它放弃了什么——不做的代价也要算。
-analysis-and-thinking · cost-and-choice · smart-mans-training · yujun-product-methodology
+## 代价与机会成本（5 本）
+选它放弃了什么——不做的代价要算，留着的代价也要算。
+analysis-and-thinking · the-book-of-elon · cost-and-choice · smart-mans-training · …另有 1 本，用 --dim 代价与机会成本 取
 
 ## 身份与角色（4 本）
 这个选择在回答"我是谁"。
@@ -106,6 +106,6 @@ the-creative-act
 整体不等于零件之和，拆开就看不见了。
 knowing-and-being
 
-## 传统与共识（6 本）
+## 传统与共识（7 本）
 共识怎么形成，又怎么被合理地推翻。
-discourse-on-method · analysis-and-thinking · historical-regimes · reflection-and-history · …另有 2 本，用 --dim 传统与共识 取
+discourse-on-method · analysis-and-thinking · the-book-of-elon · historical-regimes · …另有 3 本，用 --dim 传统与共识 取

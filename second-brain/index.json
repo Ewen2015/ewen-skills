@@ -1,6 +1,6 @@
 {
  "version": 1,
- "count": 14,
+ "count": 15,
  "dimensions": {
   "尺度": [
    "analysis-and-thinking",
@@ -16,10 +16,12 @@
   "二阶效应": [
    "analysis-and-thinking",
    "prisoners-of-our-thoughts",
+   "the-book-of-elon",
    "thinking-in-models"
   ],
   "最弱环节": [
    "analysis-and-thinking",
+   "the-book-of-elon",
    "thinking-in-models"
   ],
   "安全边际": [
@@ -88,6 +90,7 @@
   "自尊与自我修正": [
    "cost-and-choice",
    "prisoners-of-our-thoughts",
+   "the-book-of-elon",
    "thinking-in-models"
   ],
   "概率与随机": [
@@ -98,6 +101,7 @@
    "analysis-and-thinking",
    "cost-and-choice",
    "smart-mans-training",
+   "the-book-of-elon",
    "yujun-product-methodology"
   ],
   "身份与角色": [
@@ -118,7 +122,8 @@
    "discourse-on-method",
    "historical-regimes",
    "knowing-and-being",
-   "reflection-and-history"
+   "reflection-and-history",
+   "the-book-of-elon"
   ]
  },
  "books": {
@@ -960,6 +965,63 @@
    "card": "smart-mans-training.md",
    "weight": 0,
    "card_tokens_est": 2618
+  },
+  "the-book-of-elon": {
+   "title": "埃隆之书",
+   "author": "埃隆·马斯克",
+   "editor": "埃里克·乔根森（Eric Jorgenson）",
+   "lens": "这件事该不该存在？哪个环节是瓶颈？它是被谁要求出来的，还能有多快？",
+   "thesis": "顺序至关重要——先质疑要求、再删冗余，然后才轮到优化与自动化；优化一个本不该存在的东西，是最常见的错误。",
+   "dimensions": [
+    "最弱环节",
+    "二阶效应",
+    "传统与共识",
+    "自尊与自我修正",
+    "代价与机会成本"
+   ],
+   "triggers": [
+    "效率上不去",
+    "流程太复杂",
+    "需求很蠢",
+    "老板的要求",
+    "上面要求的",
+    "先做什么",
+    "优先级",
+    "顺序",
+    "要不要上自动化",
+    "该不该优化",
+    "要不要砍功能",
+    "做减法",
+    "过度设计",
+    "越改越乱",
+    "大家都这么干",
+    "权威说的",
+    "拍脑袋的需求",
+    "砍需求",
+    "删掉再说",
+    "加了一堆东西",
+    "物理定律",
+    "从零推理",
+    "第一性原理",
+    "被批评",
+    "伤感情",
+    "面子"
+   ],
+   "domains": [
+    "工程",
+    "创业",
+    "制造",
+    "第一性原理",
+    "组织",
+    "目标"
+   ],
+   "source_type": "二手汇编",
+   "source_warning": "全书由演讲、推文与访谈整理而来。编者声明内容\"脱离原始语境呈现\"、\"部分原始材料真实性无法完全确保\"，并要求引用前回原始来源核对措辞。中文本无译者与授权著录。引\"马斯克说\"之前先回一手来源。",
+   "read_at": "2026-10-07",
+   "notes": "notes/the-book-of-elon.md",
+   "card": "the-book-of-elon.md",
+   "weight": 0,
+   "card_tokens_est": 1961
   },
   "the-creative-act": {
    "title": "The Creative Act: A Way of Being",
