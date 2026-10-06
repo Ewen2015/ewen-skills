@@ -1,8 +1,9 @@
 {
  "version": 1,
- "count": 11,
+ "count": 12,
  "dimensions": {
   "尺度": [
+   "historical-regimes",
    "pale-blue-dot",
    "reflection-and-history"
   ],
@@ -26,6 +27,7 @@
    "pale-blue-dot"
   ],
   "时间与复利": [
+   "historical-regimes",
    "naval-almanack"
   ],
   "清零与重启": [
@@ -90,6 +92,7 @@
    "yujun-product-methodology"
   ],
   "身份与角色": [
+   "historical-regimes",
    "reflection-and-history",
    "smart-mans-training",
    "the-creative-act"
@@ -102,6 +105,7 @@
   ],
   "传统与共识": [
    "blue-ocean-strategy",
+   "historical-regimes",
    "knowing-and-being",
    "reflection-and-history"
   ]
@@ -274,6 +278,84 @@
    "card": "cost-and-choice.md",
    "weight": 0,
    "card_tokens_est": 2636
+  },
+  "historical-regimes": {
+   "title": "历史性的体制：当下主义与时间经验",
+   "author": "弗朗索瓦·阿赫托戈（François Hartog）",
+   "editor": [],
+   "lens": "这件事背后，过去被放在哪、未来是什么形状？是谁在替我们安排时间？",
+   "thesis": "一个社会怎么把过去、当下、未来扭在一起，是被一套看不见的秩序管着的（历史性的体制）；我们这一套的特征是当下成了唯一的地平线——未来从视域里消失。",
+   "dimensions": [
+    "时间与复利",
+    "尺度",
+    "传统与共识",
+    "身份与角色"
+   ],
+   "triggers": [
+    "时代变了",
+    "现在跟以前不一样",
+    "活在当下",
+    "及时行乐",
+    "看不到未来",
+    "未来看不清",
+    "没有长远规划",
+    "只顾眼前",
+    "一切都在加速",
+    "停不下来",
+    "没时间想",
+    "怀旧",
+    "记忆",
+    "纪念",
+    "遗忘",
+    "要不要记住",
+    "遗产",
+    "文物保护",
+    "老建筑",
+    "老街",
+    "历史",
+    "传统",
+    "我们从哪来",
+    "集体记忆",
+    "民族",
+    "身份",
+    "追责",
+    "不溯既往",
+    "不受时效",
+    "后代",
+    "可持续发展",
+    "长期主义",
+    "时间",
+    "时代感",
+    "当代",
+    "焦虑",
+    "阿赫托戈",
+    "历史性的体制",
+    "当下主义",
+    "科泽勒克",
+    "诺拉",
+    "记忆之场",
+    "遗产化",
+    "历史是生活的导师",
+    "经验空间",
+    "期待视阈",
+    "英雄体制",
+    "历史性之度",
+    "双重的亏欠"
+   ],
+   "domains": [
+    "史学",
+    "时间哲学",
+    "社会学",
+    "人类学",
+    "文化"
+   ],
+   "source_type": "一手理论——作者自己提出并命名了「历史性的体制」与「当下主义」这两个概念",
+   "source_warning": "它是启发式的诊断，不是可检验的理论。「体制」（régime）这个词同时容纳饮食法、政体、转速、风向，宽到很难被证伪——作者自己也只承诺「阐明」，不承诺解释。四章个案的成色不齐：人类学与史学史那几章（第一、四、五章）材料扎实，库哈斯与城市那一段更像点题。最要紧的一条：「当下主义」描述的是**未来视域的消失**，字面上却容易读成「珍惜当下」这类正面说法，两回事。",
+   "read_at": "2026-10-06",
+   "notes": "notes/historical-regimes.md",
+   "card": "historical-regimes.md",
+   "weight": 0,
+   "card_tokens_est": 2094
   },
   "knowing-and-being": {
    "title": "认知与存在：迈克尔·波兰尼文集",

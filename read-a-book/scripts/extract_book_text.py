@@ -162,6 +162,7 @@ def main():
         return
 
     out_path = Path(args.out).expanduser() if args.out else path.with_suffix(".txt")
+    out_path.parent.mkdir(parents=True, exist_ok=True)
     body = "\n\n".join(
         f"{PAGE_ANCHOR.format(n=index)}\n{text.strip()}"
         for index, text in enumerate(sections, 1)

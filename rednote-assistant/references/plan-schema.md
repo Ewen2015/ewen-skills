@@ -27,6 +27,25 @@
 
 **`partial: true` 时不要输出任何缺口结论**，先按提示把 Chrome 切到前台重扫。
 
+> 更正（2026-10-06）：「把 Chrome 切到前台」这条处方**不成立**。实测把窗口从屏幕外恢复、
+> 顶层化、把笔记管理设为活动标签页之后，列表**仍然只出 10 张**（`document.hasFocus()` 依旧为 false，
+> 因为跑命令的是终端）。所以真正的出路是下面这条：换成人工核对过的占用清单。
+
+`plan.py ready` 读到 `partial: true` 会**直接判不过**（检查项「队列扫描完整」），
+因为空档 = 已定时档位的补集，少读一条就凭空多一个空档——2026-10-06 它报出的「空档」
+正是《纳瓦尔宝典》占着的 10-07。读不全时改用人工清单：
+
+```
+state/scheduled-verified.json
+{"source": "凭什么信这份清单", "scheduled": [{"time": "2026-10-07 22:00", "title": "…"}]}
+```
+
+```bash
+python3 plan.py ready ... --scheduled-verified state/scheduled-verified.json
+```
+
+给了它就不再因 `partial` 判不过，但会多一条「占用清单有人工来源」检查。
+
 笔记列表是虚拟滚动的：首屏只挂约 10 张，往下要靠滚动触发下一页。
 而**这个请求在 Chrome 窗口不在前台时根本不发**（`document.hasFocus()` 为 `false`），
 卡片数会一直不变——很容易被误读成"列表到底了"。

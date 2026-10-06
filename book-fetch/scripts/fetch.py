@@ -661,6 +661,78 @@ def _protection_scope(path: Path) -> str | None:
     return None
 
 
+EPUB_MIMETYPE = b"application/epub+zip"
+
+
+def _is_unzipped_epub(p: Path) -> bool:
+    """用户交来的"epub 路径"其实是个**解压后的目录**——交书入口的第三种形态（R38）。
+
+    判据取最可靠的两条：`mimetype` 写的是 epub 的 MIME，或者有 `META-INF/container.xml`
+    （epub 的规范入口）。看后缀会误判，因为这种目录的后缀常常正好也写成 `.epub`。
+    """
+    if not p.is_dir():
+        return False
+    try:
+        if (p / "mimetype").is_file() and \
+                (p / "mimetype").read_bytes().strip() == EPUB_MIMETYPE:
+            return True
+    except OSError:
+        pass
+    return (p / "META-INF" / "container.xml").is_file()
+
+
+def repack_epub_dir(src: Path, out: Path) -> Path:
+    """把解压后的 epub 目录重新打成标准 epub。
+
+    `mimetype` 必须是 zip 里的**第一项**且 **stored（不压缩）**——epub 规范这么要求，
+    顺序错了或者被压了，多数阅读器直接判为损坏。其余条目正常 deflate。
+    """
+    if out.exists():
+        die(f"重打包的目标已存在，先处理：{out}")
+    files = sorted(f for f in src.rglob("*") if f.is_file())
+    with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
+        mt = src / "mimetype"
+        if mt.is_file():
+            z.write(mt, "mimetype", compress_type=zipfile.ZIP_STORED)
+        for f in files:
+            rel = f.relative_to(src).as_posix()
+            if rel != "mimetype":
+                z.write(f, rel, compress_type=zipfile.ZIP_DEFLATED)
+    return out
+
+
+def _repack_target(src: Path, out: str | None) -> Path:
+    return Path(os.path.expanduser(out)) if out else src.with_suffix(REPACK_SUFFIX)
+
+
+REPACK_SUFFIX = ".repacked.epub"
+
+
+def strip_repack_marker(stem: str) -> str:
+    """去掉重打包留下的 `.repacked` 标记。
+
+    这个标记是**我们**加的（目录名已经叫 `X.epub`，重打包只能换个名字），
+    不是书名的一部分——不剥掉就会一路带进书名、笔记和小红书标题。
+    """
+    marker = REPACK_SUFFIX[: -len(".epub")]      # ".repacked"
+    return stem[: -len(marker)] if stem.endswith(marker) else stem
+
+
+def resolve_source(src: Path, repackage: bool = False,
+                   out: str | None = None) -> Path:
+    """把"用户交来的路径"变成一条真能读的文件路径；目录形态就地重打包。
+
+    只在 `repackage=True` 时写盘，且**原目录一律保留**——用户可能还要。
+    """
+    if not _is_unzipped_epub(src):
+        return src
+    target = _repack_target(src, out)
+    repack_epub_dir(src, target)
+    print(f"交来的是**解压后的 epub 目录**，已重新打包 ✓  {target}")
+    print(f"原目录保留未动：{src}")
+    return target
+
+
 def cmd_check_source(args) -> int:
     """交书入口的前置检查：这个路径现在读得到吗？只报告，不动文件。"""
     p = Path(os.path.expanduser(args.path))
@@ -674,8 +746,20 @@ def cmd_check_source(args) -> int:
         print("不存在 ✗")
         return 1
     if p.is_dir():
-        print("这是个目录不是文件 ✗（epub/pdf 要指到具体文件）")
-        return 1
+        if not _is_unzipped_epub(p):
+            print("这是个目录不是文件 ✗（epub/pdf 要指到具体文件）")
+            return 1
+        if not getattr(args, "repackage", False):
+            print("这是个目录不是文件——但它**是解压后的 epub**，直接重打一次就行 ✗")
+            print("  不用手工 zip，加一个开关：")
+            print(f'    fetch.py check-source --path "{p}" --repackage')
+            print("  重打包只写一个新的 .epub，原目录保留不动。")
+            return 1
+        try:
+            p = resolve_source(p, repackage=True, out=getattr(args, "out", None))
+        except OSError as e:
+            print(f"重打包失败 ✗（{e}）")
+            return 1
 
     scope = _protection_scope(p)
     try:
@@ -777,6 +861,12 @@ def cmd_adopt(args) -> int:
     走的是和 `download` 同一条尾巴。**只复制不移动**：用户手里那份原件不动。
     """
     src = Path(os.path.expanduser(args.path))
+    if _is_unzipped_epub(src):
+        try:
+            src = resolve_source(src, repackage=True,
+                                 out=getattr(args, "out", None))
+        except OSError as e:
+            die(f"重打包失败：{e}")
     rc = cmd_check_source(argparse.Namespace(path=str(src)))
     if rc != 0:
         print("\n→ 先把上面的问题解决，再重新 adopt。（这一步没有任何写入）")
@@ -793,7 +883,7 @@ def cmd_adopt(args) -> int:
         print(f"\n已复制进书库：{target}（原件没动）")
 
     meta = _epub_metadata(target) if target.suffix.lower() == ".epub" else {}
-    raw_stem = clean_filename(target.stem, "", "")
+    raw_stem = clean_filename(strip_repack_marker(target.stem), "", "")
     # 文件名常写成「书名 - 作者」。后半段只有在**著录能对上**（或根本没有著录）时才当作者，
     # 否则会把 `Sapiens - A Brief History` 这种真副标题砍掉。
     creator = str(meta.get("creator") or "").strip()
@@ -802,9 +892,12 @@ def cmd_adopt(args) -> int:
         head, tail = raw_stem.rsplit(" - ", 1)
         if tail and len(tail) <= 30 and (not creator or norm(tail) == norm(creator)):
             tail_author, raw_stem = tail, head
-    title = args.title or (meta.get("title") if _looks_uninformative(raw_stem) else raw_stem)
+    # 文件名常常是下载/下载器拼的营销长串（括号还会被文件系统吃掉，清洗规则就失效了），
+    # 而 dc:title 是出版社给的著录——两者都清洗一遍，著录优先。
+    meta_title = clean_filename(str(meta.get("title") or ""), "", "")
+    title = args.title or (meta_title if not _looks_uninformative(meta_title) else "")
     if not title or _looks_uninformative(title):
-        title = meta.get("title") or raw_stem or "未命名"
+        title = raw_stem or meta.get("title") or "未命名"
     author = args.author or creator or tail_author
     clean = target.with_name(clean_filename(title, author, target.suffix.lower()))
     if clean != target:
@@ -832,6 +925,9 @@ def main() -> int:
 
     p = sub.add_parser("check-source", help="交书入口的前置检查：这个路径读得到吗（只报告）")
     p.add_argument("--path", required=True, help="用户交来的 epub/pdf 路径")
+    p.add_argument("--repackage", action="store_true",
+                   help="路径是解压后的 epub 目录时就地重打包成 .epub")
+    p.add_argument("--out", default=None, help="重打包的输出路径（默认同名 .repacked.epub）")
     p.set_defaults(fn=cmd_check_source)
 
     p = sub.add_parser("adopt", help="收编用户直接交来的文件：验可达 → 落位 → 洗名字 → 登记")
@@ -841,6 +937,7 @@ def main() -> int:
     p.add_argument("--author", help="覆盖作者")
     p.add_argument("--status", default="fetched", help="登记状态，默认 fetched")
     p.add_argument("--note", default="")
+    p.add_argument("--out", default=None, help="重打包的输出路径（默认同名 .repacked.epub）")
     p.set_defaults(fn=cmd_adopt)
 
     p = sub.add_parser("shortlist", help="剔除李鬼、打分、解析封面与书目")

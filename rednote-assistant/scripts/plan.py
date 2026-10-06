@@ -486,8 +486,24 @@ def cmd_ready(args) -> int:
         ok, why = run_render_check(post, find_render_cards())
         add("版式实测全绿", ok, why)
 
-    scheduled = ((load_json(Path(args.state).expanduser()) or {}) if args.state
-                 else {}).get("queue", {}).get("scheduled") or []
+    state_q = ((load_json(Path(args.state).expanduser()) or {}) if args.state
+               else {}).get("queue") or {}
+    scheduled = state_q.get("scheduled") or []
+    # 队列扫描不完整时，**不能**报"有空闲时段"：漏读的那几条正是被占用的时段，
+    # 照着报出来的空档排期就会把新笔记压在旧笔记上面。宁可判不过。
+    #
+    # 唯一的例外：调用方明确交来一份**人工核对过的**占用清单（--scheduled-verified）。
+    # 扫描会漏读，人不会——那时以这份清单为准，不再看 partial。
+    if getattr(args, "scheduled_verified", None):
+        vf = Path(args.scheduled_verified).expanduser()
+        v = load_json(vf) or {}
+        scheduled = v.get("scheduled") or []
+        add("占用清单有人工来源", bool(scheduled) and bool(v.get("source")),
+            f"{len(scheduled)} 条 —— {v.get('source') or '缺 source 字段'}")
+    elif args.state and state_q.get("partial"):
+        add("队列扫描完整", False,
+            f"只读到 {state_q.get('cards_scanned')} / {state_q.get('expected_total')} 篇，"
+            "空档不可信——先把 Chrome 切到前台重跑 xhs_state.py")
     cad = plan.get("cadence") or {}
     slot = next_free_slot(datetime.now(), args.weeks,
                           cad.get("weekdays") or [2, 6],
@@ -619,12 +635,20 @@ def main() -> int:
     p.add_argument("--workspace", default=None)
     p.add_argument("--post", default=None, help="post 目录；不给则要求 posts/ 下只有一篇成品")
     p.add_argument("--state", default=None, help="xhs_state.py 输出，用来避开已定时档位")
+    p.add_argument("--scheduled-verified", default=None,
+                   help="人工核对过的占用清单 JSON"
+                        "（{\"source\":\"…\",\"scheduled\":[{\"time\":\"2026-10-07 22:00\"}]}）；"
+                        "给了它就不再依赖扫描，也不再因 partial 判不过")
     p.add_argument("--weeks", type=int, default=4)
     p.add_argument("--json", action="store_true")
     p.set_defaults(fn=cmd_ready)
     p = sub.add_parser("report", help="出排期与缺口报告")
     p.add_argument("--workspace", default=None)
     p.add_argument("--state", default=None, help="xhs_state.py 输出的 JSON")
+    p.add_argument("--scheduled-verified", default=None,
+                   help="人工核对过的占用清单 JSON"
+                        "（{\"source\":\"…\",\"scheduled\":[{\"time\":\"2026-10-07 22:00\"}]}）；"
+                        "给了它就不再依赖扫描，也不再因 partial 判不过")
     p.add_argument("--weeks", type=int, default=4)
     p.add_argument("--json", action="store_true")
     p.set_defaults(fn=cmd_report)

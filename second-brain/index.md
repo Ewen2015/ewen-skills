@@ -10,9 +10,9 @@
 - 用法：读这张表 → 挑 2–4 个维度 → `python3 scripts/brain.py recall --dim <维度>` 取书
   → 只读那 1–2 张卡。
 
-## 尺度（2 本）
+## 尺度（3 本）
 把问题放到更大的坐标里再看，判断会变。
-reflection-and-history · pale-blue-dot
+historical-regimes · reflection-and-history · pale-blue-dot
 
 ## 假两难（3 本）
 先问这是不是真取舍，还是被自己设成了二选一。
@@ -34,9 +34,9 @@ thinking-in-models
 善意的干预会把一种风险换成另一种，先说清换成了哪种。
 cost-and-choice · pale-blue-dot
 
-## 时间与复利（1 本）
+## 时间与复利（2 本）
 什么会随时间累积，什么会随时间折旧。
-naval-almanack
+historical-regimes · naval-almanack
 
 ## 清零与重启（1 本）
 经验是双刃，初心与"不知道"有独立价值。
@@ -94,9 +94,9 @@ blue-ocean-strategy · thinking-in-models
 选它放弃了什么——不做的代价也要算。
 cost-and-choice · smart-mans-training · yujun-product-methodology
 
-## 身份与角色（3 本）
+## 身份与角色（4 本）
 这个选择在回答"我是谁"。
-reflection-and-history · smart-mans-training · the-creative-act
+historical-regimes · reflection-and-history · smart-mans-training · the-creative-act
 
 ## 完成与发布（1 本）
 什么时候算做完，以及发出去要付的代价。
@@ -106,6 +106,6 @@ the-creative-act
 整体不等于零件之和，拆开就看不见了。
 knowing-and-being
 
-## 传统与共识（3 本）
+## 传统与共识（4 本）
 共识怎么形成，又怎么被合理地推翻。
-reflection-and-history · blue-ocean-strategy · knowing-and-being
+historical-regimes · reflection-and-history · blue-ocean-strategy · knowing-and-being
