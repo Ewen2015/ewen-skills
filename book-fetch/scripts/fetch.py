@@ -843,10 +843,15 @@ def _epub_metadata(path: Path) -> dict:
     return out
 
 
+_PLACEHOLDER_STEMS = {"未命名", "book", "untitled"}
+
+
 def _looks_uninformative(stem: str) -> bool:
-    """文件名是不是"没有信息量"（哈希串、纯数字）——是的话别拿它当书名。"""
+    """文件名是不是"没有信息量"（哈希串、纯数字、占位名）——是的话别拿它当书名。"""
     s = stem.strip()
     if len(s) < 2:
+        return True
+    if s.lower() in _PLACEHOLDER_STEMS:              # clean_filename 补出来的占位名
         return True
     if re.fullmatch(r"[0-9a-fA-F]{8,}", s):          # 下载器给的哈希
         return True

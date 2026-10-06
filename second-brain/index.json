@@ -1,6 +1,6 @@
 {
  "version": 1,
- "count": 13,
+ "count": 14,
  "dimensions": {
   "尺度": [
    "analysis-and-thinking",
@@ -30,6 +30,7 @@
    "pale-blue-dot"
   ],
   "时间与复利": [
+   "discourse-on-method",
    "historical-regimes",
    "naval-almanack"
   ],
@@ -57,6 +58,7 @@
   ],
   "自治与被计划": [
    "cost-and-choice",
+   "discourse-on-method",
    "knowing-and-being",
    "smart-mans-training"
   ],
@@ -65,11 +67,13 @@
    "prisoners-of-our-thoughts"
   ],
   "欲望与缺憾": [
+   "discourse-on-method",
    "naval-almanack",
    "prisoners-of-our-thoughts",
    "smart-mans-training"
   ],
   "自我怀疑与作品": [
+   "discourse-on-method",
    "smart-mans-training",
    "the-creative-act"
   ],
@@ -111,6 +115,7 @@
   "传统与共识": [
    "analysis-and-thinking",
    "blue-ocean-strategy",
+   "discourse-on-method",
    "historical-regimes",
    "knowing-and-being",
    "reflection-and-history"
@@ -348,6 +353,63 @@
    "card": "cost-and-choice.md",
    "weight": 0,
    "card_tokens_est": 2636
+  },
+  "discourse-on-method": {
+   "title": "谈谈方法",
+   "author": "勒内·笛卡尔（René Descartes）",
+   "editor": [],
+   "lens": "这件事我凭什么相信？它是被谁、在什么基础上放进我脑子里的，还是我自己一步一步验证出来的？",
+   "thesis": "分辨真假的良知人人生来均等，分歧出在“运用思想的途径”上——所以想不清楚该被当成方法问题而不是能力问题；而怀疑只是清场（挖掉沙子和浮土），不是目的，它要换来的是一块能站人的磐石。",
+   "dimensions": [
+    "自我怀疑与作品",
+    "传统与共识",
+    "自治与被计划",
+    "时间与复利",
+    "欲望与缺憾"
+   ],
+   "triggers": [
+    "想不清楚",
+    "想不明白",
+    "脑子不够用",
+    "是不是我不够聪明",
+    "不知道该信谁",
+    "大家都这么说",
+    "权威说的",
+    "书上都这么说",
+    "独立思考",
+    "怎么判断真假",
+    "怎么验证一件事",
+    "信息太多不知道信哪个",
+    "别人说什么都信",
+    "怀疑一切",
+    "怀疑主义",
+    "复杂问题怎么拆",
+    "从哪开始想",
+    "想不透",
+    "决策之前怎么想",
+    "要不要照规矩来",
+    "笛卡尔",
+    "我思故我在",
+    "方法论",
+    "只求克服自己",
+    "改变不了环境",
+    "命运",
+    "养成习惯",
+    "定规矩"
+   ],
+   "domains": [
+    "哲学",
+    "认识论",
+    "方法论",
+    "近代思想史"
+   ],
+   "source_type": "一手——笛卡尔本人所写（代序是译者的评传，不算本书的思想来源）",
+   "source_warning": "书前那篇 1984 年的代序用阶级分析框架评述笛卡尔（“新兴的资产阶级”“畏首畏尾的、自相矛盾的、错误百出的末流思想”），那是那个年代评传体的写法，**不能当作笛卡尔说的**；书里凡引代序的语气与论断，都要注明是王太庆 1984 年的评述。另：中译本用原纸型影印，出版说明自称“译文未能重新校订”，引用最好回原书核一遍。",
+   "read_at": "2026-10-07",
+   "notes": "notes/discourse-on-method.md",
+   "card": "discourse-on-method.md",
+   "weight": 1,
+   "card_tokens_est": 2631
   },
   "historical-regimes": {
    "title": "历史性的体制：当下主义与时间经验",

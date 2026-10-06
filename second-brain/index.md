@@ -34,9 +34,9 @@ thinking-in-models
 善意的干预会把一种风险换成另一种，先说清换成了哪种。
 cost-and-choice · pale-blue-dot
 
-## 时间与复利（2 本）
+## 时间与复利（3 本）
 什么会随时间累积，什么会随时间折旧。
-historical-regimes · naval-almanack
+discourse-on-method · historical-regimes · naval-almanack
 
 ## 清零与重启（1 本）
 经验是双刃，初心与"不知道"有独立价值。
@@ -62,21 +62,21 @@ reflection-and-history · knowing-and-being
 把平时不当回事的东西硬拽到焦点上，判断会被破坏。
 prisoners-of-our-thoughts · knowing-and-being
 
-## 自治与被计划（3 本）
+## 自治与被计划（4 本）
 谁在定目标——被安排的活和自己的主动性，产出机制不同。
-cost-and-choice · smart-mans-training · knowing-and-being
+discourse-on-method · cost-and-choice · smart-mans-training · knowing-and-being
 
 ## 意义自赋（2 本）
 意义不是被赐予的，是人自己保管的，所以责任更重而不是更轻。
 pale-blue-dot · prisoners-of-our-thoughts
 
-## 欲望与缺憾（3 本）
+## 欲望与缺憾（4 本）
 不得到就不快乐，是一份可以撤掉的约定。
-smart-mans-training · naval-almanack · prisoners-of-our-thoughts
+discourse-on-method · smart-mans-training · naval-almanack · prisoners-of-our-thoughts
 
-## 自我怀疑与作品（2 本）
+## 自我怀疑与作品（3 本）
 分清怀疑的是这件事，还是怀疑自己。
-smart-mans-training · the-creative-act
+discourse-on-method · smart-mans-training · the-creative-act
 
 ## 地图与疆域（6 本）
 报表、职级、简历都是地图，不是现实本身。
@@ -106,6 +106,6 @@ the-creative-act
 整体不等于零件之和，拆开就看不见了。
 knowing-and-being
 
-## 传统与共识（5 本）
+## 传统与共识（6 本）
 共识怎么形成，又怎么被合理地推翻。
-analysis-and-thinking · historical-regimes · reflection-and-history · blue-ocean-strategy · …另有 1 本，用 --dim 传统与共识 取
+discourse-on-method · analysis-and-thinking · historical-regimes · reflection-and-history · …另有 2 本，用 --dim 传统与共识 取
