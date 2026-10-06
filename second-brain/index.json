@@ -1,8 +1,9 @@
 {
  "version": 1,
- "count": 12,
+ "count": 13,
  "dimensions": {
   "尺度": [
+   "analysis-and-thinking",
    "historical-regimes",
    "pale-blue-dot",
    "reflection-and-history"
@@ -13,10 +14,12 @@
    "yujun-product-methodology"
   ],
   "二阶效应": [
+   "analysis-and-thinking",
    "prisoners-of-our-thoughts",
    "thinking-in-models"
   ],
   "最弱环节": [
+   "analysis-and-thinking",
    "thinking-in-models"
   ],
   "安全边际": [
@@ -71,6 +74,7 @@
    "the-creative-act"
   ],
   "地图与疆域": [
+   "analysis-and-thinking",
    "blue-ocean-strategy",
    "cost-and-choice",
    "reflection-and-history",
@@ -87,6 +91,7 @@
    "thinking-in-models"
   ],
   "代价与机会成本": [
+   "analysis-and-thinking",
    "cost-and-choice",
    "smart-mans-training",
    "yujun-product-methodology"
@@ -104,6 +109,7 @@
    "knowing-and-being"
   ],
   "传统与共识": [
+   "analysis-and-thinking",
    "blue-ocean-strategy",
    "historical-regimes",
    "knowing-and-being",
@@ -111,6 +117,70 @@
   ]
  },
  "books": {
+  "analysis-and-thinking": {
+   "title": "分析与思考：黄奇帆的复旦经济课",
+   "author": "黄奇帆",
+   "editor": "",
+   "lens": "这件事的失衡在哪一节？哪个变量是内因、哪个只是必要条件？把边界条件改一改，它会往哪走？",
+   "thesis": "中国当下最重要的几个经济问题都是**结构失衡**而不是总量不足；找到结构性的短板、改变它的边界条件，问题会自己朝预期的方向转化。",
+   "dimensions": [
+    "最弱环节",
+    "传统与共识",
+    "地图与疆域",
+    "二阶效应",
+    "代价与机会成本",
+    "尺度"
+   ],
+   "triggers": [
+    "房价为什么这么高",
+    "房价",
+    "买不起房",
+    "要不要买房",
+    "楼市",
+    "房地产",
+    "钱印多了",
+    "放水",
+    "通货膨胀",
+    "印钞",
+    "M2",
+    "人民币",
+    "汇率",
+    "股市为什么不涨",
+    "炒股",
+    "A股",
+    "去杠杆",
+    "债务",
+    "地方债",
+    "土地财政",
+    "中美贸易战",
+    "关税",
+    "出口",
+    "供给侧改革",
+    "结构性改革",
+    "经济政策",
+    "政策为什么没用",
+    "宏观",
+    "公租房",
+    "保障房",
+    "黄奇帆",
+    "分析与思考",
+    "复旦经济课"
+   ],
+   "domains": [
+    "中国经济",
+    "宏观经济学",
+    "财政金融",
+    "房地产",
+    "公共政策"
+   ],
+   "source_type": "一手（作者本人的授课与演讲讲稿）",
+   "source_warning": "判断与数据的时点集中在 2017—2019 年，核心数字止于 2019 年底；书中的预测（如美国债务危机）未被验证，只能当当时的判断读。",
+   "read_at": "2026-10-06",
+   "notes": "notes/analysis-and-thinking.md",
+   "card": "analysis-and-thinking.md",
+   "weight": 1,
+   "card_tokens_est": 2113
+  },
   "blue-ocean-strategy": {
    "title": "蓝海战略",
    "author": "W.钱·金（W. Chan Kim）、勒妮·莫博涅（Renée Mauborgne）",

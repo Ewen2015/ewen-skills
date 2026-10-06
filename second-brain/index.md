@@ -10,21 +10,21 @@
 - 用法：读这张表 → 挑 2–4 个维度 → `python3 scripts/brain.py recall --dim <维度>` 取书
   → 只读那 1–2 张卡。
 
-## 尺度（3 本）
+## 尺度（4 本）
 把问题放到更大的坐标里再看，判断会变。
-historical-regimes · reflection-and-history · pale-blue-dot
+analysis-and-thinking · historical-regimes · reflection-and-history · pale-blue-dot
 
 ## 假两难（3 本）
 先问这是不是真取舍，还是被自己设成了二选一。
 blue-ocean-strategy · pale-blue-dot · yujun-product-methodology
 
-## 二阶效应（2 本）
+## 二阶效应（3 本）
 结果背后的结果，不假装连锁反应不存在。
-prisoners-of-our-thoughts · thinking-in-models
+analysis-and-thinking · prisoners-of-our-thoughts · thinking-in-models
 
-## 最弱环节（1 本）
+## 最弱环节（2 本）
 乘法系统里，一项归零会把其余全部吃掉。
-thinking-in-models
+analysis-and-thinking · thinking-in-models
 
 ## 安全边际（1 本）
 为不可逆的事留容错空间。
@@ -78,9 +78,9 @@ smart-mans-training · naval-almanack · prisoners-of-our-thoughts
 分清怀疑的是这件事，还是怀疑自己。
 smart-mans-training · the-creative-act
 
-## 地图与疆域（5 本）
+## 地图与疆域（6 本）
 报表、职级、简历都是地图，不是现实本身。
-cost-and-choice · reflection-and-history · blue-ocean-strategy · yujun-product-methodology · …另有 1 本，用 --dim 地图与疆域 取
+analysis-and-thinking · cost-and-choice · reflection-and-history · blue-ocean-strategy · …另有 2 本，用 --dim 地图与疆域 取
 
 ## 自尊与自我修正（3 本）
 挡住改主意的往往不是无知，是自尊。
@@ -90,9 +90,9 @@ cost-and-choice · prisoners-of-our-thoughts · thinking-in-models
 分清运气和本事，别把均值回归当成趋势。
 blue-ocean-strategy · thinking-in-models
 
-## 代价与机会成本（3 本）
+## 代价与机会成本（4 本）
 选它放弃了什么——不做的代价也要算。
-cost-and-choice · smart-mans-training · yujun-product-methodology
+analysis-and-thinking · cost-and-choice · smart-mans-training · yujun-product-methodology
 
 ## 身份与角色（4 本）
 这个选择在回答"我是谁"。
@@ -106,6 +106,6 @@ the-creative-act
 整体不等于零件之和，拆开就看不见了。
 knowing-and-being
 
-## 传统与共识（4 本）
+## 传统与共识（5 本）
 共识怎么形成，又怎么被合理地推翻。
-historical-regimes · reflection-and-history · blue-ocean-strategy · knowing-and-being
+analysis-and-thinking · historical-regimes · reflection-and-history · blue-ocean-strategy · …另有 1 本，用 --dim 传统与共识 取
