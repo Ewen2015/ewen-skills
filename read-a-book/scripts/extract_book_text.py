@@ -9,8 +9,9 @@ anchors so notes and quotes can cite a location and the reader can go back to
 it. The table of contents is printed to stdout.
 
 For PDF it uses PyMuPDF when available, otherwise poppler's `pdftotext`. For a
-scanned PDF with no text layer the output is nearly empty; render the pages to
-images and OCR them instead.
+scanned PDF with no text layer the output is nearly empty; run
+`ocr_scanned_pdf.py` (same directory) instead — it probes the text layer first and
+falls back to Apple Vision OCR, emitting the same `<<<PDFPAGE n>>>` page anchors.
 """
 
 import argparse
@@ -50,7 +51,7 @@ def extract_pdf_poppler(path):
         sys.exit(
             "No PDF text extractor available. Install PyMuPDF "
             "(`pip install pymupdf`) or poppler (`brew install poppler`), "
-            "or render the pages to images and OCR them."
+            "or run ocr_scanned_pdf.py (Apple Vision OCR fallback)."
         )
     result = subprocess.run(
         [exe, "-layout", "-enc", "UTF-8", str(path), "-"],
@@ -172,7 +173,7 @@ def main():
     if suffix == ".pdf" and sections and total / len(sections) < 50:
         print(
             "Warning: very little text per page. This PDF is probably a scan "
-            "with no text layer; render the pages to images and OCR them.",
+            "with no text layer; run ocr_scanned_pdf.py instead.",
             file=sys.stderr,
         )
     if suffix == ".epub":
