@@ -591,6 +591,26 @@ def switch_state(page, label: str) -> dict:
     return json.loads(page.evaluate(SWITCH_PROBE_JS % json.dumps(label)))
 
 
+# R35: a confirmed dialog whose Vue leave-transition deadlocks parks an
+# *invisible* `.d-modal-mask` (display:block / opacity:0) over the page forever,
+# and that mask swallows every click aimed at the form behind it. Observed
+# 2026-10-05 and again 2026-10-06, both times on the 原创声明须知 dialog.
+# An invisible mask has no legitimate job, so drop it (and the modal that was
+# leaving with it). A mask that is still visible belongs to a real dialog —
+# leave that alone and keep waiting.
+CLEAR_STUCK_MASK_JS = """(() => {
+  const mask = document.querySelector('.d-modal-mask');
+  if (!mask) return 0;
+  const cs = getComputedStyle(mask);
+  if (cs.display === 'none') return 0;
+  if (parseFloat(cs.opacity || '1') > 0.01) return 0;
+  mask.remove();
+  let n = 1;
+  document.querySelectorAll('.d-modal').forEach((m) => { m.remove(); n++; });
+  return n;
+})()"""
+
+
 def wait_no_mask(page, timeout: float = 45.0) -> None:
     """Wait out any modal mask.
 
@@ -602,16 +622,26 @@ def wait_no_mask(page, timeout: float = 45.0) -> None:
     Measured 2026-10: the mask stays in the DOM with `display:block` and
     `opacity:0` for ~18s after the 原创声明 dialog is confirmed. An earlier
     10s budget expired first, the click was swallowed, and 定时发布 looked
-    like a broken switch. So: wait generously, and if it is still there,
-    stop instead of clicking into a dead overlay.
+    like a broken switch. So: wait generously.
+
+    If it is *still* there when the budget runs out, it is not slow — it is
+    stuck (R35). Self-heal by removing the invisible overlay instead of dying:
+    the Vue state survives, the form is intact, and re-running the command
+    costs nothing. Dying here used to drag down the unrelated `schedule` step
+    that runs next.
     """
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
         if not page.evaluate("!!document.querySelector('.d-modal-mask')"):
             return
         time.sleep(0.4)
+    removed = page.evaluate(CLEAR_STUCK_MASK_JS)
+    if removed:
+        print(f"弹窗遮罩超过 {timeout:.0f}s 未消失，已清掉卡死的遮罩节点"
+              f"（{removed} 个），继续。", file=sys.stderr)
+        return
     die(f"弹窗遮罩 .d-modal-mask 超过 {timeout:.0f}s 仍未消失，"
-        "此时点击会被吞掉。请稍后重跑这条命令。")
+        "且它不是透明残留（真弹窗还开着），此时点击会被吞掉。请稍后重跑这条命令。")
 
 
 def set_switch(page, label: str, want: bool = True) -> bool:
