@@ -73,7 +73,7 @@ nohup .venv/bin/python scripts/bridge_server.py > /tmp/xhs-bridge.log 2>&1 &
 `asyncio.wait_for`）。正文是逐字输入的，**~900 字带 8 个话题标签时会跑过 90s**，
 症状是 CLI 报「命令执行超时（90s）」而页面上其实已经填好了——重跑会把内容填两遍。
 
-补丁在 [`../patches/`](../patches/)，改成读 `XHS_CMD_TIMEOUT`（默认 300s）：
+补丁在 [`../patches/`](../patches/)，改成读 `XHS_CMD_TIMEOUT`（默认 900s）：
 
 ```bash
 cd "$XHS_SKILLS_DIR" && git am <path>/bridge-command-timeout.patch
@@ -81,6 +81,39 @@ cd "$XHS_SKILLS_DIR" && git am <path>/bridge-command-timeout.patch
 
 已提上游 PR [autoclaw-cc/xiaohongshu-skills#102](https://github.com/autoclaw-cc/xiaohongshu-skills/pull/102)；
 合入之后这段就可以删掉。
+
+**默认值为什么是 900s 而不是"正常要多久"**：`CMD_TIMEOUT` 在**进程启动时**读一次。
+一个用旧默认起着的常驻 server 会一直占着 9333，之后每条 CLI 都连到它、拿到那个旧上限——
+**这时在 shell 里 `XHS_CMD_TIMEOUT=900 python3 xhs.py fill` 是完全没用的**，
+因为环境变量属于调用方，不属于那个已经在跑的进程。默认值贴着"正常要多久"，
+就会在"有人先起了一个 server"这种最普通的情况下悄悄失效。
+
+所以 `xhs.py` 这一侧做了两件事（`ensure_server`，本项目自己的代码，不在上游补丁里）：
+
+- **发现就换掉。** `ping_server` 会回报 server 自己实际生效的 `cmd_timeout`；
+  `ensure_server` 拿它和需要的值比，不够就杀掉端口上那个 `bridge_server.py` 再起一个。
+  `xhs.py status` 会把这行打出来，低于 900s 时直接标出来。
+- **换完等扩展。** 换 server 会断开扩展（扩展侧 3s 一次重连），不等它就会在紧接着的
+  第一条命令上撞「Extension 未连接」——这是换 server 动作**自带的新故障**，
+  不是原来那个。`ensure_server` 换完会等最多 25s 确认扩展回来。
+
+回归测法（两条都要过）：
+
+```bash
+# 1) 故意起一个旧上限的 server
+cd "$XHS_SKILLS_DIR" && XHS_CMD_TIMEOUT=120 nohup .venv/bin/python scripts/bridge_server.py >> /tmp/xhs-bridge.log 2>&1 &
+sleep 4
+python3 <skill>/scripts/xhs.py status          # 应打印「命令上限 : 120s  ← 低于 900s…」
+python3 <skill>/scripts/xhs.py reset           # 应打印「停掉旧 bridge server…」并正常完成
+python3 <skill>/scripts/xhs.py status          # 应打印「命令上限 : 900s」
+```
+
+**注意 `_kill_port_owner` 只杀命令行里带 `bridge_server.py` 的进程**：
+`lsof -ti tcp:9333` 也会列出只是连着这个端口的客户端，按 pid 直接杀会连自己一起带走。
+
+**macOS 上没有 `setsid` / `timeout`**（那是 GNU coreutils）。想让 bridge 活过当前 shell，
+`nohup … &` 就够了；但 **Codex 的 `exec_command` 会话结束时会把整个进程组收掉**，
+所以每轮发布都在**同一条命令里**先把 bridge 起起来再跑后续步骤，不要跨命令依赖它活着。
 
 ## 页面事实（会随小红书改版失效，用前先验）
 

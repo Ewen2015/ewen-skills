@@ -27,6 +27,7 @@ import argparse
 import json
 import os
 import re
+import signal
 import subprocess
 import sys
 import tempfile
@@ -207,24 +208,91 @@ def bridge():
     return BridgePage(BRIDGE_URL), CDPError
 
 
-def ensure_server() -> None:
+# 命令墙钟上限。服务端在**进程启动时**把它定死，所以一个用旧默认起着的
+# 常驻 server 会把之后所有 CLI 都按在旧上限上——调 CLI 这边的环境变量没用。
+# 这里的做法是：发现端口上那个 server 的上限不够，就把它换掉再起一个。
+DEFAULT_CMD_TIMEOUT = 900
+
+
+def _kill_port_owner() -> bool:
+    """把占着 bridge 端口的旧 server 停掉（换一个上限更高的）。
+
+    只杀命令行里带 `bridge_server.py` 的进程——`lsof -ti tcp:PORT` 也会列出
+    只是"连着"这个端口的客户端，误杀会连自己一起带走。
+    """
+    port = BRIDGE_URL.rsplit(":", 1)[-1].split("/")[0] or "9333"
+    try:
+        out = subprocess.run(["lsof", "-ti", f"tcp:{port}"],
+                             capture_output=True, text=True, timeout=10).stdout
+    except Exception:
+        return False
+    killed = False
+    for pid in [p.strip() for p in out.split() if p.strip().isdigit()]:
+        if int(pid) == os.getpid():
+            continue
+        try:
+            cmd = subprocess.run(["ps", "-o", "command=", "-p", pid],
+                                 capture_output=True, text=True, timeout=10).stdout
+        except Exception:
+            continue
+        if "bridge_server.py" not in cmd:
+            continue
+        try:
+            os.kill(int(pid), signal.SIGTERM)
+            print(f"停掉旧 bridge server（pid {pid}，命令上限不足）")
+            killed = True
+        except ProcessLookupError:
+            pass
+    if killed:
+        time.sleep(2)
+    return killed
+
+
+def _wait_extension(page, timeout: float = 25.0) -> bool:
+    """等扩展重新连上刚换过的 server（扩展侧是 3s 一次重连）。"""
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        if page.is_extension_connected():
+            return True
+        time.sleep(1)
+    return False
+
+
+def _spawn_server(python: str, server, timeout: float) -> None:
+    env = dict(os.environ)
+    env["XHS_CMD_TIMEOUT"] = str(int(timeout))
+    subprocess.Popen([python, str(server)], env=env,
+                     stdout=open("/tmp/xhs-bridge.log", "ab"),
+                     stderr=subprocess.STDOUT)
+
+
+def ensure_server(required_timeout: float = DEFAULT_CMD_TIMEOUT) -> None:
     page, _ = bridge()
+    restarted = False
     if page.is_server_running():
-        return
+        live = page.server_cmd_timeout()
+        if live is None or live >= required_timeout:
+            return
+        # 端口上是一个用更小上限起着的常驻进程：CLI 侧调大没用，必须换掉。
+        restarted = _kill_port_owner()
     server = SKILLS_DIR / "scripts" / "bridge_server.py"
     if not server.exists():
         die(f"找不到 {server}；先跑 scripts/setup_bridge.sh")
     print("启动 bridge server…")
     venv = SKILLS_DIR / ".venv" / "bin" / "python"
     python = str(venv) if venv.exists() else sys.executable
-    subprocess.Popen([python, str(server)],
-                     stdout=open("/tmp/xhs-bridge.log", "ab"),
-                     stderr=subprocess.STDOUT)
+    _spawn_server(python, server, required_timeout)
     for _ in range(10):
         time.sleep(1)
         if page.is_server_running():
-            return
-    die("bridge server 起不来，见 /tmp/xhs-bridge.log")
+            break
+    else:
+        die("bridge server 起不来，见 /tmp/xhs-bridge.log")
+    if restarted and not _wait_extension(page):
+        # 换过 server 之后扩展要重连，不等它就会在第一条命令上撞
+        # 「Extension 未连接」——这正是换 server 自带的新故障。
+        die("换了 bridge server，但浏览器扩展 25s 内没重连上；"
+            "看看 Chrome 里 XHS Bridge 扩展是否还开着")
 
 
 def cli(*args: str) -> subprocess.CompletedProcess:
@@ -397,6 +465,14 @@ def cmd_status(_args) -> int:
     ok_server = page.is_server_running()
     ok_ext = page.is_extension_connected() if ok_server else False
     print(f"bridge server : {'运行中' if ok_server else '未运行'}")
+    if ok_server:
+        live = page.server_cmd_timeout()
+        if live is None:
+            print("命令上限      : 未知（旧版 server，没有报这个字段）")
+        else:
+            flag = "" if live >= DEFAULT_CMD_TIMEOUT else \
+                f"  ← 低于 {DEFAULT_CMD_TIMEOUT}s，长正文会撞 R36，跑任意命令会自动换掉它"
+            print(f"命令上限      : {int(live)}s{flag}")
     print(f"浏览器扩展    : {'已连接' if ok_ext else '未连接'}")
     if ok_ext:
         print(f"当前页面      : {page.evaluate('location.href')}")
