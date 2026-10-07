@@ -10,9 +10,9 @@
 - 用法：读这张表 → 挑 2–4 个维度 → `python3 scripts/brain.py recall --dim <维度>` 取书
   → 只读那 1–2 张卡。
 
-## 尺度（4 本）
+## 尺度（5 本）
 把问题放到更大的坐标里再看，判断会变。
-analysis-and-thinking · historical-regimes · reflection-and-history · pale-blue-dot
+analysis-and-thinking · beginning-of-infinity · historical-regimes · reflection-and-history · …另有 1 本，用 --dim 尺度 取
 
 ## 假两难（3 本）
 先问这是不是真取舍，还是被自己设成了二选一。
@@ -78,21 +78,21 @@ discourse-on-method · smart-mans-training · naval-almanack · prisoners-of-our
 怀疑该放在哪里——既不轻易怀疑自己，也不把"我以为我知道"当成知道。
 discourse-on-method · socratic-apology · smart-mans-training · the-creative-act
 
-## 地图与疆域（6 本）
+## 地图与疆域（7 本）
 报表、职级、简历都是地图，不是现实本身。
-analysis-and-thinking · cost-and-choice · reflection-and-history · blue-ocean-strategy · …另有 2 本，用 --dim 地图与疆域 取
+analysis-and-thinking · beginning-of-infinity · cost-and-choice · reflection-and-history · …另有 3 本，用 --dim 地图与疆域 取
 
-## 自尊与自我修正（4 本）
+## 自尊与自我修正（5 本）
 挡住改主意的往往不是无知，是自尊。
-the-book-of-elon · cost-and-choice · prisoners-of-our-thoughts · thinking-in-models
+beginning-of-infinity · the-book-of-elon · cost-and-choice · prisoners-of-our-thoughts · …另有 1 本，用 --dim 自尊与自我修正 取
 
 ## 概率与随机（2 本）
 分清运气和本事，别把均值回归当成趋势。
 blue-ocean-strategy · thinking-in-models
 
-## 代价与机会成本（7 本）
+## 代价与机会成本（8 本）
 选它放弃了什么——不做的代价要算，留着的代价也要算。
-analysis-and-thinking · road-to-serfdom · socratic-apology · the-book-of-elon · …另有 3 本，用 --dim 代价与机会成本 取
+analysis-and-thinking · beginning-of-infinity · road-to-serfdom · socratic-apology · …另有 4 本，用 --dim 代价与机会成本 取
 
 ## 身份与角色（6 本）
 这个选择在回答"我是谁"。
@@ -106,6 +106,6 @@ the-creative-act
 整体不等于零件之和，拆开就看不见了。
 knowing-and-being
 
-## 传统与共识（9 本）
+## 传统与共识（10 本）
 共识怎么形成，又怎么被合理地推翻。
-discourse-on-method · analysis-and-thinking · road-to-serfdom · socratic-apology · …另有 5 本，用 --dim 传统与共识 取
+discourse-on-method · analysis-and-thinking · beginning-of-infinity · road-to-serfdom · …另有 6 本，用 --dim 传统与共识 取

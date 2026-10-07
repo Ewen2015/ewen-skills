@@ -15,6 +15,7 @@ Rules checked (source: references/cards.md, references/copywriting.md, SKILL.md)
     3. 强调色一号是 Volvo Safety Orange #FD6408
     4. 封面素材存在、是 RGB、宽度达到交付画布下限
     5. 成品目录里只有一个标题／正文版本（没有 body-v2.txt 这类并行版本）
+    6. 正文里没有人设的"反面清单"词——AI 味连接词与行话（见 references/persona.md 第 5 节）
 
 Not machine-checkable here, only warned about: 封面"是不是这本书真实存在的封面"——那需要
 一条声明字段，见 manifest.json 的 cover.source。
@@ -33,6 +34,12 @@ HALF_BAKED = ["需查证", "待核实", "待考", "据称", "据传", "未经核
 
 ACCENT_WANT = "FD6408"
 COVER_FLOOR = 900
+
+# references/persona.md 第 5 节「反面清单」。一出现就不像这个号，不区分上下文。
+AI_SMELL = ["综上所述", "总而言之", "值得注意", "不难发现", "让我们一起", "不得不说",
+            "赋能", "底层逻辑", "抓手", "颗粒度", "打法", "信息爆炸", "快节奏的时代",
+            "由此可见", "众所周知", "一举两得", "锦上添花"]
+
 
 TEXT_FILES = ["title.txt", "body.txt"]
 VERSION_RE = re.compile(r"^(title|body)[-_]?v?\d+.*\.txt$", re.I)
@@ -145,6 +152,21 @@ def scan_cover(post: Path, manifest: dict) -> tuple[bool, str, str | None]:
     return True, f"{src.name} {w}px {mode}", note
 
 
+def scan_persona(post: Path) -> tuple[bool, str]:
+    """人设的反面清单 + 出处行在不在。词表见 references/persona.md 第 5 节。"""
+    lines = [ln.strip() for ln in read(post / "body.txt").splitlines() if ln.strip()]
+    if not lines:
+        return True, "没有正文"
+    hits = [w for w in AI_SMELL if w in "\n".join(lines)]
+    if hits:
+        return False, "正文里有不像这个号的说法：" + "、".join(hits[:5])
+    tail = [ln for ln in lines[-6:] if not ln.startswith("#")]
+    has_source = any(ln.startswith("（") or "｜" in ln or "|" in ln for ln in tail)
+    if not has_source:
+        return True, "词表干净（提醒：没找到出处行，确认是有意省掉的）"
+    return True, "词表干净"
+
+
 def scan_versions(post: Path) -> tuple[bool, str]:
     extra = [f.name for f in post.iterdir()
              if f.is_file() and f.suffix.lower() == ".txt"
@@ -187,6 +209,7 @@ def main() -> int:
     if note:
         warns.append(note)
     add("只有一个版本", *scan_versions(post))
+    add("人设：无 AI 味词", *scan_persona(post))
 
     passed = all(c["ok"] for c in checks)
     rep = {"post": str(post), "pass": passed, "checks": checks, "warnings": warns}

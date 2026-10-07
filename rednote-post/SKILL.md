@@ -36,11 +36,23 @@ metadata:
 ## 工作流
 
 ### 1. 定角度
+
+**先读 [`references/persona.md`](references/persona.md)——当前博主的人设，然后才开始想角度。**
+它是一份**输入，不是锁**：里面写清了这个号是谁、语气在哪儿、哪些写法是这个号的定式
+（以及哪些只是可以摆动的）。用户当次指定了别的语气，就以用户说的为准；
+换了账号，就换这份文件。
+
 能从上下文推断就别问。要确定的是：发什么、给谁看、是否指定合集、有没有现成图片。
 选题时挑**对读者直接有用**的点——读者点赞收藏的是"这跟我有关"，不是"这个内容很好"。
 文案结构与体量见 [`references/copywriting.md`](references/copywriting.md)。
 
 ### 2. 写标题与正文
+
+**按人设写。** 语气、重音手法（emoji／断行／符号，正文不能加粗）、"每条观点接一句怎么用"、
+结尾回到读者身上、单独一行的出处行——都在
+[`references/persona.md`](references/persona.md) 的第 3 节里，每条附了成品里的证据。
+写完对着它的第 6 节自查一遍。
+
 标题 ≤ 20 字（超限 CLI 直接报错）；正文 ≤ 1000 字。正文末尾的 `#标签` 会被 CLI 自动识别成
 话题。**正文最后一行单独放 `#标签`，用空格分隔**（如 `#意会认知 #波兰尼 #读书`），
 不要另填 `--tags`。
@@ -205,6 +217,8 @@ python3 <skill>/scripts/xhs.py status
 
 ## 参考文件
 
+- [`references/persona.md`](references/persona.md)——**当前博主的人设**（账号事实、十五条写法定式、
+  可摆动的部分、反面清单、写完自查、怎么更新）
 - [`references/copywriting.md`](references/copywriting.md)——标题公式、正文骨架、字数与标签规则
 - [`references/cards.md`](references/cards.md)——1080×1440 卡片系统、字号下限、素材处理
 - [`references/publishing.md`](references/publishing.md)——桥接环境、选择器、故障排查、发布后核验

@@ -1,9 +1,10 @@
 {
  "version": 1,
- "count": 17,
+ "count": 18,
  "dimensions": {
   "尺度": [
    "analysis-and-thinking",
+   "beginning-of-infinity",
    "historical-regimes",
    "pale-blue-dot",
    "reflection-and-history"
@@ -85,6 +86,7 @@
   ],
   "地图与疆域": [
    "analysis-and-thinking",
+   "beginning-of-infinity",
    "blue-ocean-strategy",
    "cost-and-choice",
    "reflection-and-history",
@@ -92,6 +94,7 @@
    "yujun-product-methodology"
   ],
   "自尊与自我修正": [
+   "beginning-of-infinity",
    "cost-and-choice",
    "prisoners-of-our-thoughts",
    "the-book-of-elon",
@@ -103,6 +106,7 @@
   ],
   "代价与机会成本": [
    "analysis-and-thinking",
+   "beginning-of-infinity",
    "cost-and-choice",
    "road-to-serfdom",
    "smart-mans-training",
@@ -126,6 +130,7 @@
   ],
   "传统与共识": [
    "analysis-and-thinking",
+   "beginning-of-infinity",
    "blue-ocean-strategy",
    "discourse-on-method",
    "historical-regimes",
@@ -200,6 +205,66 @@
    "card": "analysis-and-thinking.md",
    "weight": 1,
    "card_tokens_est": 2113
+  },
+  "beginning-of-infinity": {
+   "title": "无穷的开始：世界进步的本源",
+   "author": "戴维·多伊奇",
+   "editor": [],
+   "lens": "这件事挡住你的是物理规律，还是你还没找到一个好解释？",
+   "thesis": "所有失败都是知识不足造成的；解释没有上限，所以进步也没有上限——挡住它的是知识匮乏，不是资源、人性或物理规律。",
+   "dimensions": [
+    "地图与疆域",
+    "自尊与自我修正",
+    "传统与共识",
+    "尺度",
+    "代价与机会成本"
+   ],
+   "triggers": [
+    "卡住了",
+    "没办法",
+    "做不到",
+    "不可能",
+    "无解",
+    "就这样了",
+    "认命",
+    "想不出来",
+    "到顶了",
+    "瓶颈",
+    "进步会不会停",
+    "还有没有希望",
+    "悲观",
+    "乐观",
+    "盲目乐观",
+    "预防原则",
+    "凡事小心",
+    "是我不行",
+    "天赋",
+    "试错",
+    "犯错",
+    "认错",
+    "怎么知道是对的",
+    "专家说的",
+    "科学证明",
+    "看到的不一定是真的",
+    "可持续",
+    "资源有限",
+    "内卷",
+    "文明会不会崩溃"
+   ],
+   "domains": [
+    "科学哲学",
+    "认识论",
+    "政治哲学",
+    "文化",
+    "物理"
+   ],
+   "source_type": "一手（作者本人著作）",
+   "source_warning": "第 11–12 章（多重宇宙、物理学哲学史）本轮只做了检视阅读，引用这两章时要留意。道德与美学那两章是对话体和论述混合，作者的立场色彩很重，不是中立综述。",
+   "read_at": "2026-10-07",
+   "notes": "notes/beginning-of-infinity.md",
+   "card": "beginning-of-infinity.md",
+   "weight": 0,
+   "card_tokens_est": 1786
   },
   "blue-ocean-strategy": {
    "title": "蓝海战略",
