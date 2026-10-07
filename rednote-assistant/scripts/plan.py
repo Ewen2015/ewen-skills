@@ -202,6 +202,18 @@ def find_render_cards() -> Path | None:
     return None
 
 
+def occupancy_path(args, ws: Path) -> Path | None:
+    """在哪里找"已占用的档位"。
+
+    不给 --state 时**默认用 workspace 里那份**（<ws>/state/state.json），
+    而不是当作"没有任何东西被占用"——后者会把早就被占的档位报成空档。
+    """
+    if getattr(args, "state", None):
+        return Path(args.state).expanduser()
+    cand = ws / "state/state.json"
+    return cand if cand.is_file() else None
+
+
 def next_free_slot(now: datetime, weeks: int, weekdays: list[int],
                    slots_txt: list[str], scheduled: list[dict]):
     """计划时段里第一个没被平台定时占用的空档。"""
@@ -486,8 +498,8 @@ def cmd_ready(args) -> int:
         ok, why = run_render_check(post, find_render_cards())
         add("版式实测全绿", ok, why)
 
-    state_q = ((load_json(Path(args.state).expanduser()) or {}) if args.state
-               else {}).get("queue") or {}
+    state_path = occupancy_path(args, ws)
+    state_q = ((load_json(state_path) or {}) if state_path else {}).get("queue") or {}
     scheduled = state_q.get("scheduled") or []
     # 队列扫描不完整时，**不能**报"有空闲时段"：漏读的那几条正是被占用的时段，
     # 照着报出来的空档排期就会把新笔记压在旧笔记上面。宁可判不过。
@@ -500,10 +512,16 @@ def cmd_ready(args) -> int:
         scheduled = v.get("scheduled") or []
         add("占用清单有人工来源", bool(scheduled) and bool(v.get("source")),
             f"{len(scheduled)} 条 —— {v.get('source') or '缺 source 字段'}")
-    elif args.state and state_q.get("partial"):
+    elif state_q.get("partial"):
         add("队列扫描完整", False,
             f"只读到 {state_q.get('cards_scanned')} / {state_q.get('expected_total')} 篇，"
             "空档不可信——先把 Chrome 切到前台重跑 xhs_state.py")
+    elif not scheduled:
+        # 没有占用清单时**不能**报空档：`scheduled` 是空的，任何时段都会显得空闲，
+        # 于是把当天 22:00 这种早就被占的档报成"下一个空档"。宁可判不过。
+        add("占用清单可用", False,
+            f"没有读到任何已定时的档位（{state_path or '未提供 --state'}）——"
+            "先跑 xhs_state.py queue，或用 --scheduled-verified 交一份人工清单")
     cad = plan.get("cadence") or {}
     slot = next_free_slot(datetime.now(), args.weeks,
                           cad.get("weekdays") or [2, 6],

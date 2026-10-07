@@ -18,9 +18,9 @@ analysis-and-thinking · historical-regimes · reflection-and-history · pale-bl
 先问这是不是真取舍，还是被自己设成了二选一。
 blue-ocean-strategy · pale-blue-dot · yujun-product-methodology
 
-## 二阶效应（4 本）
-结果背后的结果，不假装连锁反应不存在。
-analysis-and-thinking · the-book-of-elon · prisoners-of-our-thoughts · thinking-in-models
+## 二阶效应（5 本）
+结果背后的结果，不假装连锁反应不存在——运行久了，机制会自己挑人。
+analysis-and-thinking · road-to-serfdom · the-book-of-elon · prisoners-of-our-thoughts · …另有 1 本，用 --dim 二阶效应 取
 
 ## 最弱环节（3 本）
 乘法系统里，一项归零会把其余全部吃掉。
@@ -62,9 +62,9 @@ reflection-and-history · knowing-and-being
 把平时不当回事的东西硬拽到焦点上，判断会被破坏。
 prisoners-of-our-thoughts · knowing-and-being
 
-## 自治与被计划（4 本）
+## 自治与被计划（5 本）
 谁在定目标——被安排的活和自己的主动性，产出机制不同。
-discourse-on-method · cost-and-choice · smart-mans-training · knowing-and-being
+discourse-on-method · road-to-serfdom · cost-and-choice · smart-mans-training · …另有 1 本，用 --dim 自治与被计划 取
 
 ## 意义自赋（3 本）
 意义不是被赐予的，是人自己保管的，所以责任更重而不是更轻。
@@ -90,13 +90,13 @@ the-book-of-elon · cost-and-choice · prisoners-of-our-thoughts · thinking-in-
 分清运气和本事，别把均值回归当成趋势。
 blue-ocean-strategy · thinking-in-models
 
-## 代价与机会成本（6 本）
+## 代价与机会成本（7 本）
 选它放弃了什么——不做的代价要算，留着的代价也要算。
-analysis-and-thinking · socratic-apology · the-book-of-elon · cost-and-choice · …另有 2 本，用 --dim 代价与机会成本 取
+analysis-and-thinking · road-to-serfdom · socratic-apology · the-book-of-elon · …另有 3 本，用 --dim 代价与机会成本 取
 
-## 身份与角色（5 本）
+## 身份与角色（6 本）
 这个选择在回答"我是谁"。
-socratic-apology · historical-regimes · reflection-and-history · smart-mans-training · …另有 1 本，用 --dim 身份与角色 取
+road-to-serfdom · socratic-apology · historical-regimes · reflection-and-history · …另有 2 本，用 --dim 身份与角色 取
 
 ## 完成与发布（1 本）
 什么时候算做完，以及发出去要付的代价。
@@ -106,6 +106,6 @@ the-creative-act
 整体不等于零件之和，拆开就看不见了。
 knowing-and-being
 
-## 传统与共识（8 本）
+## 传统与共识（9 本）
 共识怎么形成，又怎么被合理地推翻。
-discourse-on-method · analysis-and-thinking · socratic-apology · the-book-of-elon · …另有 4 本，用 --dim 传统与共识 取
+discourse-on-method · analysis-and-thinking · road-to-serfdom · socratic-apology · …另有 5 本，用 --dim 传统与共识 取

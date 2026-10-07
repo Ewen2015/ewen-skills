@@ -1,6 +1,6 @@
 {
  "version": 1,
- "count": 16,
+ "count": 17,
  "dimensions": {
   "尺度": [
    "analysis-and-thinking",
@@ -16,6 +16,7 @@
   "二阶效应": [
    "analysis-and-thinking",
    "prisoners-of-our-thoughts",
+   "road-to-serfdom",
    "the-book-of-elon",
    "thinking-in-models"
   ],
@@ -62,6 +63,7 @@
    "cost-and-choice",
    "discourse-on-method",
    "knowing-and-being",
+   "road-to-serfdom",
    "smart-mans-training"
   ],
   "意义自赋": [
@@ -102,6 +104,7 @@
   "代价与机会成本": [
    "analysis-and-thinking",
    "cost-and-choice",
+   "road-to-serfdom",
    "smart-mans-training",
    "socratic-apology",
    "the-book-of-elon",
@@ -110,6 +113,7 @@
   "身份与角色": [
    "historical-regimes",
    "reflection-and-history",
+   "road-to-serfdom",
    "smart-mans-training",
    "socratic-apology",
    "the-creative-act"
@@ -127,6 +131,7 @@
    "historical-regimes",
    "knowing-and-being",
    "reflection-and-history",
+   "road-to-serfdom",
    "socratic-apology",
    "the-book-of-elon"
   ]
@@ -861,6 +866,76 @@
    "card": "reflection-and-history.md",
    "weight": 0,
    "card_tokens_est": 3075
+  },
+  "road-to-serfdom": {
+   "title": "通向奴役之路",
+   "author": "弗里德里希·哈耶克",
+   "editor": null,
+   "lens": "别问这里的人怎么这么差，问这个位置在奖励什么、淘汰什么。",
+   "thesis": "一群真诚想自由的人，把制度推向自己最害怕的样子——不是坏人阴谋，是结构在挑人。",
+   "dimensions": [
+    "自治与被计划",
+    "二阶效应",
+    "身份与角色",
+    "代价与机会成本",
+    "传统与共识"
+   ],
+   "triggers": [
+    "计划",
+    "被安排",
+    "管太细",
+    "自主权",
+    "有没有空间",
+    "外行指导内行",
+    "好心办坏事",
+    "越改越乱",
+    "反噬",
+    "连锁反应",
+    "后果",
+    "上面的人越来越差",
+    "劣币驱逐良币",
+    "逆淘汰",
+    "制度在挑人",
+    "换个人就好了吗",
+    "奖励什么",
+    "考核什么就得到什么",
+    "一致",
+    "要所有人一条心",
+    "站队",
+    "我们和你们",
+    "找敌人",
+    "替罪羊",
+    "说真话的代价",
+    "讲实话",
+    "统一口径",
+    "上面的意见不能问",
+    "法治",
+    "规则可不可预期",
+    "自由和保障",
+    "安全换自由",
+    "为了稳定",
+    "值不值得",
+    "代价",
+    "谁来买单",
+    "大家都这么说",
+    "共识",
+    "政治正确",
+    "不敢反对"
+   ],
+   "domains": [
+    "政治哲学",
+    "政治经济学",
+    "制度",
+    "自由",
+    "奥地利学派"
+   ],
+   "source_type": "一手（作者本人著作）",
+   "source_warning": "写于 1944 年战时，材料大量取自当年流亡者、记者与立场鲜明的观察者叙述；\"计划\"一词的用法很宽（从国有化一路盖到社会保障），引用他的具体预言时要留出这个宽度。",
+   "read_at": "2026-10-07",
+   "notes": "notes/road-to-serfdom.md",
+   "card": "road-to-serfdom.md",
+   "weight": 0,
+   "card_tokens_est": 2136
   },
   "smart-mans-training": {
    "title": "聪明人的训练",
