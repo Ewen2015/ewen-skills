@@ -369,18 +369,41 @@ def stamp() -> str:
     return datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds")
 
 
+def merge_into_file(payload: dict, p: Path) -> dict:
+    """把这次扫到的段并进已有文件，**不动**这次没扫的段。
+
+    一次 `queue` 扫描只带 queue 这一段；直接覆盖会把手上的 history 抹掉，
+    而下游（`rsi.py`）读 history 时用的是 `or []`——抹掉之后只会"数字变少"，
+    不会报错。少报和没有，在输出上是同形的。
+    """
+    if not p.exists():
+        return payload
+    try:
+        old = json.loads(p.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return payload
+    if not isinstance(old, dict):
+        return payload
+    return {**old, **payload}
+
+
 def emit(payload: dict, out: str | None) -> None:
     text = json.dumps(payload, ensure_ascii=False, indent=1)
     if out:
         p = Path(out)
         p.parent.mkdir(parents=True, exist_ok=True)
-        p.write_text(text, encoding="utf-8")
+        merged = merge_into_file(payload, p)
+        p.write_text(json.dumps(merged, ensure_ascii=False, indent=1), encoding="utf-8")
         print(f"已写出 {p}")
-        for k, v in payload.items():
+        for k, v in merged.items():
             if isinstance(v, list):
                 print(f"  {k}: {len(v)} 条")
             elif isinstance(v, dict) and k != "scanned_at":
                 print(f"  {k}: {json.dumps(v, ensure_ascii=False)[:120]}")
+        kept = [k for k in merged if k not in payload and k != "scanned_at"]
+        if kept:
+            print(f"  保留本次未扫描的段：{'、'.join(kept)}")
+        payload = merged
     else:
         print(text)
     warn_incomplete(payload)
@@ -422,16 +445,21 @@ def main() -> int:
     args = ap.parse_args()
 
     page, _ = bridge()
-    payload = {"scanned_at": stamp()}
+    ts = stamp()
+    payload = {"scanned_at": ts}
 
     if args.cmd in ("queue", "all"):
         goto_note_manager(page)
-        payload["queue"] = scan_queue(page, args.max)
+        queue = scan_queue(page, args.max)
+        queue["scanned_at"] = ts
+        payload["queue"] = queue
     if args.cmd in ("drafts", "all"):
         payload["drafts"] = scan_drafts(page)
     if args.cmd in ("history", "all"):
         goto_note_manager(page)
-        payload["history"] = scan_history(page, args.max)
+        history = scan_history(page, args.max)
+        history["scanned_at"] = ts
+        payload["history"] = history
 
     if args.cmd == "all":
         payload["source_url"] = NOTE_MANAGER_URL

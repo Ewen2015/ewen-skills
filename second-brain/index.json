@@ -1,6 +1,6 @@
 {
  "version": 1,
- "count": 15,
+ "count": 16,
  "dimensions": {
   "尺度": [
    "analysis-and-thinking",
@@ -66,7 +66,8 @@
   ],
   "意义自赋": [
    "pale-blue-dot",
-   "prisoners-of-our-thoughts"
+   "prisoners-of-our-thoughts",
+   "socratic-apology"
   ],
   "欲望与缺憾": [
    "discourse-on-method",
@@ -77,6 +78,7 @@
   "自我怀疑与作品": [
    "discourse-on-method",
    "smart-mans-training",
+   "socratic-apology",
    "the-creative-act"
   ],
   "地图与疆域": [
@@ -101,6 +103,7 @@
    "analysis-and-thinking",
    "cost-and-choice",
    "smart-mans-training",
+   "socratic-apology",
    "the-book-of-elon",
    "yujun-product-methodology"
   ],
@@ -108,6 +111,7 @@
    "historical-regimes",
    "reflection-and-history",
    "smart-mans-training",
+   "socratic-apology",
    "the-creative-act"
   ],
   "完成与发布": [
@@ -123,6 +127,7 @@
    "historical-regimes",
    "knowing-and-being",
    "reflection-and-history",
+   "socratic-apology",
    "the-book-of-elon"
   ]
  },
@@ -965,6 +970,64 @@
    "card": "smart-mans-training.md",
    "weight": 0,
    "card_tokens_est": 2618
+  },
+  "socratic-apology": {
+   "title": "苏格拉底的申辩（第三版）",
+   "author": "柏拉图（借苏格拉底之口）",
+   "editor": "刘小枫（「柏拉图读本」／HERMES 柏拉图注疏集 主编）",
+   "lens": "这件事我是真的知道，还是从来没人问过我？被问倒的时候，我改，还是恨那个问的人？",
+   "thesis": "他比别人强的地方只有一处——绝不认为自己懂得自己所不懂的；而自以为知道，是最危险的无知。",
+   "dimensions": [
+    "传统与共识",
+    "自我怀疑与作品",
+    "意义自赋",
+    "代价与机会成本",
+    "身份与角色"
+   ],
+   "triggers": [
+    "我要不要坚持",
+    "大家都这么说",
+    "权威说的",
+    "不敢反驳",
+    "说真话的代价",
+    "我特别有把握",
+    "会不会我错了",
+    "高估自己",
+    "自以为懂",
+    "真的知道吗",
+    "不懂装懂",
+    "承认不知道",
+    "活着有什么意义",
+    "该不该闭嘴",
+    "要不要妥协",
+    "为了原则值得吗",
+    "明知会输还要做吗",
+    "想当然了",
+    "怕死",
+    "死亡",
+    "怎么面对失去",
+    "我是谁",
+    "想成为什么样的人",
+    "牛虻",
+    "讨人厌",
+    "被孤立",
+    "为什么活",
+    "图什么"
+   ],
+   "domains": [
+    "哲学",
+    "伦理",
+    "古希腊",
+    "判断力",
+    "生活方式"
+   ],
+   "source_type": "一手（柏拉图署名作品）",
+   "source_warning": "苏格拉底述而不作，全书没有一句是他亲手写下的。译者明说这篇\"不是'法庭实录'或'历史档案'，而是文学创作\"。凡引\"苏格拉底说\"，实为\"柏拉图笔下的苏格拉底说\"；吴飞的疏是解读，与译文要分开。",
+   "read_at": "2026-10-07",
+   "notes": "notes/socratic-apology.md",
+   "card": "socratic-apology.md",
+   "weight": 0,
+   "card_tokens_est": 1897
   },
   "the-book-of-elon": {
    "title": "埃隆之书",

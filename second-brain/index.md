@@ -66,17 +66,17 @@ prisoners-of-our-thoughts · knowing-and-being
 谁在定目标——被安排的活和自己的主动性，产出机制不同。
 discourse-on-method · cost-and-choice · smart-mans-training · knowing-and-being
 
-## 意义自赋（2 本）
+## 意义自赋（3 本）
 意义不是被赐予的，是人自己保管的，所以责任更重而不是更轻。
-pale-blue-dot · prisoners-of-our-thoughts
+socratic-apology · pale-blue-dot · prisoners-of-our-thoughts
 
 ## 欲望与缺憾（4 本）
 不得到就不快乐，是一份可以撤掉的约定。
 discourse-on-method · smart-mans-training · naval-almanack · prisoners-of-our-thoughts
 
-## 自我怀疑与作品（3 本）
-分清怀疑的是这件事，还是怀疑自己。
-discourse-on-method · smart-mans-training · the-creative-act
+## 自我怀疑与作品（4 本）
+怀疑该放在哪里——既不轻易怀疑自己，也不把"我以为我知道"当成知道。
+discourse-on-method · socratic-apology · smart-mans-training · the-creative-act
 
 ## 地图与疆域（6 本）
 报表、职级、简历都是地图，不是现实本身。
@@ -90,13 +90,13 @@ the-book-of-elon · cost-and-choice · prisoners-of-our-thoughts · thinking-in-
 分清运气和本事，别把均值回归当成趋势。
 blue-ocean-strategy · thinking-in-models
 
-## 代价与机会成本（5 本）
+## 代价与机会成本（6 本）
 选它放弃了什么——不做的代价要算，留着的代价也要算。
-analysis-and-thinking · the-book-of-elon · cost-and-choice · smart-mans-training · …另有 1 本，用 --dim 代价与机会成本 取
+analysis-and-thinking · socratic-apology · the-book-of-elon · cost-and-choice · …另有 2 本，用 --dim 代价与机会成本 取
 
-## 身份与角色（4 本）
+## 身份与角色（5 本）
 这个选择在回答"我是谁"。
-historical-regimes · reflection-and-history · smart-mans-training · the-creative-act
+socratic-apology · historical-regimes · reflection-and-history · smart-mans-training · …另有 1 本，用 --dim 身份与角色 取
 
 ## 完成与发布（1 本）
 什么时候算做完，以及发出去要付的代价。
@@ -106,6 +106,6 @@ the-creative-act
 整体不等于零件之和，拆开就看不见了。
 knowing-and-being
 
-## 传统与共识（7 本）
+## 传统与共识（8 本）
 共识怎么形成，又怎么被合理地推翻。
-discourse-on-method · analysis-and-thinking · the-book-of-elon · historical-regimes · …另有 3 本，用 --dim 传统与共识 取
+discourse-on-method · analysis-and-thinking · socratic-apology · the-book-of-elon · …另有 4 本，用 --dim 传统与共识 取
