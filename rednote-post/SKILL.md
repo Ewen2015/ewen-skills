@@ -89,6 +89,18 @@ python3 <skill>/scripts/render_cards.py <post-dir>
 它渲染 `manifest.json` 里列的每张卡，并检查：溢出、压页脚、正文区字号低于下限、孤字换行。
 **任何一项不过就改版式，不要靠肉眼放行。** 修完重跑，直到全绿再进入下一步。
 
+排版之外还有一层**内容合规**，用另一个脚本查：
+
+```bash
+python3 <skill>/scripts/check_content.py <post-dir>
+```
+
+它查的是 `render_cards.py` 看不见的"意思"——半成品标记、正文加粗、强调色 `#FD6408`、
+封面素材是否可用、有没有并存的第二版本文案。规则写在
+[`references/copywriting.md`](references/copywriting.md) 和
+[`references/cards.md`](references/cards.md) 里，但**判据落在脚本里**，
+不靠每次重读 SKILL.md 去记。两个脚本都退出码 0 才算这一步过。
+
 ### 5. 用户确认（闸门）
 
 把下面这些一次性摆出来，然后停：
@@ -169,7 +181,7 @@ python3 <skill>/scripts/xhs.py check-published "<标题>"
 
 ```
 <post-dir>/
-|-- manifest.json      图片清单与渲染参数（render_cards.py 读）
+|-- manifest.json      图片清单与渲染参数（render_cards.py 读）；建议带 cover.source 声明封面出处
 |-- title.txt          标题，≤20 字
 |-- body.txt           正文，≤1000 字
 |-- build/             卡片 HTML + 复制的 card.css

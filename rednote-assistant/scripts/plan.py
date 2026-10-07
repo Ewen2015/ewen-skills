@@ -202,6 +202,22 @@ def find_render_cards() -> Path | None:
     return None
 
 
+def find_check_content() -> Path | None:
+    """找 rednote-post 的内容合规脚本；找不到就不能给"内容层"背书。"""
+    here = Path(__file__).resolve()
+    cands = []
+    if len(here.parents) > 2:
+        cands.append(here.parents[2] / "rednote-post" / "scripts" / "check_content.py")
+    codex_home = Path(os.environ.get("CODEX_HOME") or (Path.home() / ".codex"))
+    for root in (codex_home / "skills", Path.home() / ".codex" / "skills",
+                 Path.home() / ".agents" / "skills"):
+        cands.append(root / "rednote-post" / "scripts" / "check_content.py")
+    for c in cands:
+        if c.is_file():
+            return c
+    return None
+
+
 def occupancy_path(args, ws: Path) -> Path | None:
     """在哪里找"已占用的档位"。
 
@@ -241,6 +257,23 @@ def run_render_check(post_dir: Path, script: Path | None) -> tuple[bool, str]:
         return True, "全部通过"
     bad = [ln.strip() for ln in proc.stdout.splitlines() if "不通过" in ln or "✗" in ln]
     return False, "；".join(bad[:4]) or "有卡片未通过，看 render_cards.py 的输出"
+
+
+def run_content_check(post_dir: Path, script: Path | None) -> tuple[bool, str]:
+    """跑一遍内容合规：半成品标记、加粗、强调色、封面素材、版本唯一。"""
+    if script is None:
+        return False, "找不到 rednote-post/scripts/check_content.py，内容层没验过"
+    import subprocess
+    try:
+        proc = subprocess.run([sys.executable, str(script), str(post_dir)],
+                              capture_output=True, text=True, timeout=120)
+    except (OSError, subprocess.TimeoutExpired) as e:
+        return False, f"内容合规跑不起来：{e}"
+    if proc.returncode == 0:
+        return True, "全部通过"
+    bad = [ln.strip() for ln in proc.stdout.splitlines()
+           if ln.startswith("✗") or "✗" in ln]
+    return False, "；".join(bad[:4]) or "内容合规有未通过项看 check_content.py 的输出"
 
 
 def build_schedule(slots: list[datetime], scheduled: list[dict],
@@ -497,6 +530,8 @@ def cmd_ready(args) -> int:
             f"{tags_n} 个标签" if tags else "正文最后一行不是以 # 开头的标签")
         ok, why = run_render_check(post, find_render_cards())
         add("版式实测全绿", ok, why)
+        ok, why = run_content_check(post, find_check_content())
+        add("内容合规（指令遵循）", ok, why)
 
     state_path = occupancy_path(args, ws)
     state_q = ((load_json(state_path) or {}) if state_path else {}).get("queue") or {}
