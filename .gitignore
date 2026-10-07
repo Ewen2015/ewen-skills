@@ -4,3 +4,6 @@ __pycache__/
 
 # 本地跑 xhs_state.py 时别把平台快照写进这个仓库
 state/
+
+# README 的截图源：未裁剪的原始截图只留在本地，进仓库的是裁好的 docs/profile.png
+docs/profile-raw.png

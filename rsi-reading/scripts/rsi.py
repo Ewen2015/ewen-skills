@@ -10,7 +10,7 @@
   python3 rsi.py backlog                   # 改进项队列的年龄与状态
 
 路径默认值：
-  书库  ~/Documents/GitHub/ewen-skills/second-brain
+  书库  ~/Documents/GitHub/reading-pkm/second-brain
   发布  ~/Documents/rednote            （或 $XHS_WORKSPACE）
   另加  ~/Documents/*/xhs-post 这些散落的历史产物目录
 用 --brain / --workspace / --post-root 覆盖。
@@ -27,7 +27,7 @@ from datetime import date, datetime
 from pathlib import Path
 
 HOME = Path.home()
-DEFAULT_BRAIN = HOME / "Documents/GitHub/ewen-skills/second-brain"
+DEFAULT_BRAIN = HOME / "Documents/GitHub/reading-pkm/second-brain"
 DEFAULT_WORKSPACE = Path(os.environ.get("XHS_WORKSPACE") or (HOME / "Documents/rednote"))
 EXTRA_POST_GLOB = "Documents/*/xhs-post"
 

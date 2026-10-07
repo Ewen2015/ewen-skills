@@ -132,7 +132,7 @@ rsi-reading/
 换载体后它扫不到——那正说明需要 R15 的内容模型。
 默认去这两处找数据，用 `--brain` / `--workspace` / `--post-root` 覆盖：
 
-- 书库：`~/Documents/GitHub/ewen-skills/second-brain`
+- 书库：`~/Documents/GitHub/reading-pkm/second-brain`
 - 发布：`~/Documents/rednote`（或 `$XHS_WORKSPACE`），并兜底扫 `~/Documents/*/xhs-post`
 
 ## 反模式

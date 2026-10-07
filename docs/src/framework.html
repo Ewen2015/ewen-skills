@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<title>Reading PKM — Seek Sense Share</title>
+<style>
+:root{
+  --paper:#F3EEE5; --card:#FBF8F3; --ink:#17140E; --ink2:#332E25;
+  --muted:#6B6459; --faint:#968D7E; --rule:#DAD2C3;
+  --accent:#FD6408; --accent2:#9A7B45;
+  --serif:"Songti SC","STSong","Source Han Serif SC",serif;
+  --sans:"PingFang SC","Hiragino Sans GB","Helvetica Neue",Arial,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:2400px;height:1350px;overflow:hidden;background:var(--paper);
+  font-family:var(--sans);color:var(--ink);-webkit-font-smoothing:antialiased}
+.page{position:relative;width:2400px;height:1350px;padding:76px 100px 0;
+  background:radial-gradient(120% 80% at 50% 0%,rgba(255,255,255,.55),rgba(233,225,212,0) 60%)}
+
+/* ---- header ---- */
+.kick{display:flex;justify-content:space-between;align-items:baseline;
+  font-size:17px;letter-spacing:.24em;color:var(--faint)}
+.rule{height:1px;background:var(--rule);margin:22px 0 0}
+h1{font-family:var(--serif);font-weight:600;font-size:78px;line-height:1.2;
+  margin-top:36px;letter-spacing:.005em}
+h1 em{font-style:normal;color:var(--accent)}
+.sub{margin-top:18px;font-size:26px;color:var(--muted);line-height:1.5}
+
+/* ---- stages ---- */
+.stages{display:flex;align-items:stretch;gap:0;margin-top:62px}
+.card{width:660px;background:var(--card);border:1px solid var(--rule);
+  padding:36px 44px 34px;display:flex;flex-direction:column}
+.arrow{width:90px;display:flex;align-items:center;justify-content:center;
+  color:var(--accent2);font-family:var(--serif);font-size:46px;line-height:1}
+.eyebrow{font-size:17px;letter-spacing:.26em;color:var(--accent2)}
+.zh{font-family:var(--serif);font-size:44px;font-weight:600;margin-top:10px}
+.q{margin-top:12px;font-size:25px;color:var(--muted);line-height:1.4}
+.hr{height:1px;background:var(--rule);margin:24px 0 22px}
+.row{display:flex;gap:16px;padding:12px 0}
+.row + .row{border-top:1px solid #EAE3D6}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--accent);
+  margin-top:12px;flex:0 0 auto}
+.row .nm{font-size:25px;font-weight:600;letter-spacing:.005em}
+.row .nm span{font-weight:400;color:var(--faint);font-size:19px;margin-left:8px}
+.row .ds{margin-top:5px;font-size:21px;line-height:1.45;color:var(--ink2)}
+.who{margin-top:auto;padding-top:22px}
+.tag{display:inline-block;font-size:20px;color:var(--accent);
+  background:rgba(253,100,8,.06);border-left:3px solid var(--accent);
+  padding:9px 16px;letter-spacing:.02em}
+
+/* ---- loop band ---- */
+.loop{margin-top:56px;position:relative;padding:30px 40px 32px;
+  background:var(--card);border:1px solid var(--rule)}
+.loop .lbl{font-size:19px;letter-spacing:.2em;color:var(--accent2)}
+.loop .txt{margin-top:12px;font-size:27px;line-height:1.45;color:var(--ink2)}
+.loop .txt b{font-weight:600;color:var(--ink)}
+.loop .txt i{font-style:normal;color:var(--faint)}
+.rsi{position:absolute;right:40px;bottom:30px;text-align:right;
+  font-size:21px;color:var(--faint);line-height:1.5}
+.rsi b{color:var(--ink);font-weight:600}
+
+.foot{position:absolute;left:100px;right:100px;bottom:34px;display:flex;
+  justify-content:space-between;font-size:18px;color:var(--faint);letter-spacing:.12em}
+</style></head>
+<body><div class="page">
+
+  <div class="kick"><span>READING&nbsp;PKM</span><span>SEEK&nbsp;›&nbsp;SENSE&nbsp;›&nbsp;SHARE</span></div>
+  <div class="rule"></div>
+
+  <h1>把读过的书，变成下次思考时<em>会被调用</em>的视角</h1>
+  <div class="sub">Harold Jarche 的 Seek › Sense › Share 个人知识管理模型，落到一条能跑的流水线上：<br>
+    七个 Codex skill 各管一段，人只在需要判断的地方出现。</div>
+
+  <div class="stages">
+    <div class="card">
+      <div class="eyebrow">SEEK</div>
+      <div class="zh">寻求</div>
+      <div class="q">读什么，值不值得读</div>
+      <div class="hr"></div>
+      <div class="row"><div class="dot"></div><div>
+        <div class="nm">book-fetch</div>
+        <div class="ds">找候选、剔除摘编与学习指南、六维打分、把封面与格式摆出来等一个决定</div></div></div>
+      <div class="row"><div class="dot"></div><div>
+        <div class="nm">read-a-book <span>检视阅读</span></div>
+        <div class="ds">先花几分钟建地图：这本书到底在谈什么</div></div></div>
+      <div class="who"><span class="tag">决定权在人：读什么、值不值得</span></div>
+    </div>
+
+    <div class="arrow">→</div>
+
+    <div class="card">
+      <div class="eyebrow">SENSE</div>
+      <div class="zh">化用</div>
+      <div class="q">读到了什么，站不站得住</div>
+      <div class="hr"></div>
+      <div class="row"><div class="dot"></div><div>
+        <div class="nm">read-a-book</div>
+        <div class="ds">分析阅读与主题阅读：三层笔记，兼记来处（思潮与上游）与去处（被谁影响）</div></div></div>
+      <div class="row"><div class="dot"></div><div>
+        <div class="nm">second-brain</div>
+        <div class="ds">把书压成可检索的卡片；答问时不罗列各书视野，只给一个带出处的意见</div></div></div>
+      <div class="who"><span class="tag">整理归机器，判断归人</span></div>
+    </div>
+
+    <div class="arrow">→</div>
+
+    <div class="card">
+      <div class="eyebrow">SHARE</div>
+      <div class="zh">分享</div>
+      <div class="q">用什么形态，给谁看</div>
+      <div class="hr"></div>
+      <div class="row"><div class="dot"></div><div>
+        <div class="nm">rednote-post</div>
+        <div class="ds">写成标题与正文、生成 1080×1440 卡片、实测排版、发布后回读核验</div></div></div>
+      <div class="row"><div class="dot"></div><div>
+        <div class="nm">rednote-assistant <span>·</span> scandinavian-style</div>
+        <div class="ds">排期与节奏；版式与单页 HTML——同一份素材换一种 UI 扇出去</div></div></div>
+      <div class="who"><span class="tag">执行归机器，授权归人</span></div>
+    </div>
+  </div>
+
+  <div class="loop">
+    <div class="lbl">反馈回流</div>
+    <div class="txt">各渠道的数据回到<b>选题与呈现</b>：小红书有人收藏是取用，第二大脑里被引用也是取用。
+      <i>这条边尚未闭环——今天的平台数据还没有下游在读它。</i></div>
+    <div class="rsi"><b>rsi-reading</b><br>度量整条环，一次只改一处</div>
+  </div>
+
+  <div class="foot"><span>ewen / reading-pkm</span><span>SEEK · SENSE · SHARE</span></div>
+
+</div></body></html>
