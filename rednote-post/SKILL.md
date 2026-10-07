@@ -157,6 +157,17 @@ python3 <skill>/scripts/xhs.py schedule "2026-10-06 22:00"   # 打开定时发�
 两个开关都是自定义组件，脚本自己做了真点击与回读；`schedule` 会校验时间晚于当前时间
 30 分钟以上。定时发布打开后，发布按钮的文字会变成「定时发布」。
 
+**定时发布有窗口上限（实测：今天 + 13 天），而且超窗不报错。** `schedule` 的回读读的是
+表单输入框（永远显示你填的时刻），平台存下的却可能是它自己的默认值。所以提交之后
+**必须回读卡片**，不能只看表单：
+
+```bash
+python3 <skill>/scripts/xhs.py verify-scheduled --title "<标题片段>" --expect "2026-10-21 22:00"
+```
+
+对不上就把这条删掉（`delete-note`），成品留存、等窗口放开再排。窗口判据与细节见
+[`references/publishing.md`](references/publishing.md)。
+
 ### 7. 发布
 
 ```bash

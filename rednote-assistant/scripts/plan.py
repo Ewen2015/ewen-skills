@@ -37,6 +37,12 @@ TITLE_MAX = 20          # xhs.py 硬失败线，与 CLI 一致
 BODY_MAX = 1000         # CLI 只是警告，所以这里也只算 warn
 SLOT_LEAD_MIN = 30      # 定时发布要晚于当前时间 30 分钟以上
 SLOT_MATCH_H = 6        # 与 build_schedule 同口径：6 小时内算同一个档位
+# 小红书的「定时发布」只收「今天 + 13 天」以内的时刻（2026-10-07 实测：设 10-20 存成
+# 10-20，设 10-21 掉回默认值）。超窗的表现极具欺骗性：表单**回读**仍然是你填的时刻，
+# `schedule` 因此报"已开启、时间正确"，但平台提交时把它丢掉、退回自己的默认值
+# 「今天 + 1 小时、向上取到 5 分钟」——2026-10-07 就把 10-21 22:00 的档排成了当天 22:45。
+# 所以空档落在窗口外时不能报"可自动发布"，只能判不过、把成品留着等窗口放开。记 R60。
+SCHEDULE_WINDOW_DAYS = 13
 WEEKDAY_CN = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
 
 PLAN_TEMPLATE = {
@@ -558,11 +564,21 @@ def cmd_ready(args) -> int:
             f"没有读到任何已定时的档位（{state_path or '未提供 --state'}）——"
             "先跑 xhs_state.py queue，或用 --scheduled-verified 交一份人工清单")
     cad = plan.get("cadence") or {}
-    slot = next_free_slot(datetime.now(), args.weeks,
+    now = datetime.now()
+    slot = next_free_slot(now, args.weeks,
                           cad.get("weekdays") or [2, 6],
                           cad.get("slots") or ["20:00"], scheduled)
     add("有空闲时段", slot is not None,
         slot.strftime("%Y-%m-%d %H:%M") if slot else f"未来 {args.weeks} 周排满了")
+    if slot is not None:
+        # 排得进去 ≠ 排得上：平台只收窗口内的时刻，超窗会被悄悄换成别的时间。
+        window_end = now + timedelta(days=SCHEDULE_WINDOW_DAYS)
+        add("空档在平台定时窗口内", slot <= window_end,
+            f"{slot:%Y-%m-%d %H:%M}"
+            if slot <= window_end else
+            f"{slot:%Y-%m-%d %H:%M} 超出平台窗口（今天 + {SCHEDULE_WINDOW_DAYS} 天，"
+            f"上限 {window_end:%Y-%m-%d}）——别排：平台会把超窗时间悄悄退回默认值，"
+            "而成品必须留存，等窗口放开再补排")
 
     passed = all(c["ok"] for c in checks)
     rep = {"generated_at": f"{datetime.now():%Y-%m-%d %H:%M}", "workspace": str(ws),

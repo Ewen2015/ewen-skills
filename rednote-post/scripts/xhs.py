@@ -16,6 +16,8 @@ Subcommands:
   publish                     click 发布
   check-published TITLE       confirm it landed in 已发布 on the note manager
   delete-note --id N --yes    delete one note by noteId (scheduled ones included)
+  verify-scheduled --title T --expect "YYYY-MM-DD HH:MM"
+                              read the time the platform actually stored
   shot     [--out PATH]       screenshot Chrome (for showing the user)
 
 Exit codes: 0 ok, 1 failed check, 2 environment/permission problem.
@@ -164,6 +166,24 @@ NOTE_CARDS_JS = """(() => {
   }
   return JSON.stringify(out);
 })()"""
+
+# 卡片上的定时/发布时间。**这是唯一可信的来源**：`schedule` 回读的是表单输入框的
+# value，而平台在提交时会自己重算一遍——超出窗口（实测：今天 + 13 天）就把你填的时刻
+# 丢掉，退回它自己的默认值「今天 + 1 小时、向上取到 5 分钟」。2026-10-07 因此把
+# 2026-10-21 22:00 的档排成了当天 22:45，而表单回读一路都显示 10-21 22:00。
+# 所以"到底排上了没有"只能回读卡片，不能信表单。
+CARD_TIME_JS = """(() => JSON.stringify(
+  [...document.querySelectorAll('.note-card')].map(c => {
+    let id = '';
+    try {
+      id = JSON.parse(c.getAttribute('data-impression') || '{}')
+             .noteTarget.value.noteId;
+    } catch (e) {}
+    const t = (s) => ((c.querySelector(s) || {}).innerText || '').trim();
+    return {id: id, title: t('.note-card__title'), time: t('.note-card__time'),
+            scheduled: !!c.querySelector('.note-card__schedule')};
+  })
+))()"""
 
 # 删除确认弹窗在 Vue portal 里，而且**关闭后仍留在 DOM**（走 opacity 淡出），
 # 所以要能认出"这次真的弹出来了"。注意：不能用 offsetParent 判可见——这个
@@ -910,6 +930,47 @@ def cmd_check_published(args) -> int:
     return 0
 
 
+def cmd_verify_scheduled(args) -> int:
+    """回读笔记卡片上的定时时间，和期望值比对。
+
+    表单回读会骗人（见 CARD_TIME_JS 的注释）：超窗的时刻，`schedule` 读到的是你填的
+    值，平台存下的却是它自己的默认值。这里读的是卡片——平台存了什么就是什么。
+    """
+    page, _ = bridge()
+    try:
+        want = datetime.strptime(args.expect.strip(), "%Y-%m-%d %H:%M")
+    except ValueError:
+        die(f"时间格式应为 'YYYY-MM-DD HH:MM'，收到 {args.expect!r}")
+
+    page.navigate(NOTE_MANAGER_URL)
+    time.sleep(6)
+    cards: list = []
+    for _ in range(20):
+        cards = json.loads(page.evaluate(CARD_TIME_JS))
+        if cards:
+            break
+        time.sleep(0.5)
+
+    hits = [c for c in cards if args.title in (c.get("title") or "")]
+    if not hits:
+        print(f"笔记管理里没有标题含 {args.title!r} 的卡片（扫到 {len(cards)} 张）。"
+              "刚提交的话等一下再查；列表是虚拟滚动的，较老的要往下翻才看得到。",
+              file=sys.stderr)
+        return 1
+
+    want_txt = want.strftime("%Y-%m-%d %H:%M")
+    for c in hits:
+        print(f"{'✅' if c['time'] == want_txt else '❌'} "
+              f"{c['time'] or '(无时间)'}  {c['title'][:40]}  {c['id']}")
+    if any(c["time"] == want_txt for c in hits):
+        print(f"已确认：卡片上的时间是 {want_txt}")
+        return 0
+    print(f"没对上：期望 {want_txt}，卡片上是 {hits[0]['time'] or '(空)'}。"
+          "超窗的时刻会被平台退回默认值——把这条删掉，等窗口放开再排。",
+          file=sys.stderr)
+    return 1
+
+
 def cmd_delete_note(args) -> int:
     """按 noteId 删掉一条笔记（定时未发的也算）。
 
@@ -1066,6 +1127,11 @@ def main() -> int:
     p.add_argument("--title", default=None, help="可选：断言卡片标题含此串，防误删")
     p.add_argument("--yes", action="store_true", help="确认删除（不加只报告目标）")
     p.set_defaults(fn=cmd_delete_note)
+
+    p = sub.add_parser("verify-scheduled", help="回读卡片上的定时时间并比对")
+    p.add_argument("--title", required=True, help="卡片标题（可只给一部分）")
+    p.add_argument("--expect", required=True, help="期望的定时时间 YYYY-MM-DD HH:MM")
+    p.set_defaults(fn=cmd_verify_scheduled)
 
     p = sub.add_parser("shot", help="给用户看截图（macOS）")
     p.add_argument("--out", default="/tmp/xhs-shot.png")
