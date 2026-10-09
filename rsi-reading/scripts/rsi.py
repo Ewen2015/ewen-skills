@@ -372,12 +372,18 @@ def cmd_backlog(args) -> int:
     print(f"# 改进项队列（{today}）\n")
     print("| ID | 改进项 | 状态 | 记录日期 |")
     print("| --- | --- | --- | --- |")
+    missing = []
     for rid, title in items:
         block = text.split(f"## {rid}", 1)[1].split("\n## ", 1)[0]
         m_status = re.search(r"状态[：:]\s*(.+?)\s*$", block, re.M)
-        m_date = re.search(r"(\d{4}-\d{2}-\d{2})", block)
+        # 日期只认 `记录：` 那一行。退而求其次用块里第一个日期是危险的：
+        # 证据正文里的日期（如 `posts/wuqiong-2026-10-21`）会被当成记录日期，
+        # 报出一个负数年龄——R63 的条目就撞过这个坑。
+        m_date = re.search(r"记录[：:]\s*(\d{4}-\d{2}-\d{2})", block)
         status = m_status.group(1) if m_status else "?"
         d = m_date.group(1) if m_date else "—"
+        if not m_status or not m_date:
+            missing.append(f"{rid}（缺{'、'.join([x for x, ok in (('状态', m_status), ('记录', m_date)) if not ok])}）")
         age = ""
         if m_date:
             try:
@@ -385,12 +391,18 @@ def cmd_backlog(args) -> int:
             except ValueError:
                 age = ""
         print(f"| {rid} | {title} | {status} | {d}{age} |")
+    if missing:
+        print(f"\n> ⚠️ 有 {len(missing)} 条读不出状态或记录日期，上面的表**不完整**，"
+              f"先按 backlog 的约定补 `状态：` / `记录：` 两行：{'、'.join(missing)}")
     return 0
 
 
 def post_roots(args) -> list[Path]:
-    roots = [Path(args.workspace).expanduser()]
-    roots += [Path(args.workspace).expanduser() / "published"]
+    ws = Path(args.workspace).expanduser()
+    roots = [ws]
+    # `posts/` 是 plan-schema.md 写的成品目录（R63）；`published/` 是更早的落点，保留兼容。
+    # 两个都扫，别再让报表少算成品。
+    roots += [ws / "posts", ws / "published"]
     if args.post_root:
         roots += [Path(p).expanduser() for p in args.post_root]
     else:
