@@ -1,6 +1,6 @@
 {
  "version": 1,
- "count": 18,
+ "count": 20,
  "dimensions": {
   "尺度": [
    "analysis-and-thinking",
@@ -19,12 +19,14 @@
    "prisoners-of-our-thoughts",
    "road-to-serfdom",
    "the-book-of-elon",
-   "thinking-in-models"
+   "thinking-in-models",
+   "tiny-habits"
   ],
   "最弱环节": [
    "analysis-and-thinking",
    "the-book-of-elon",
-   "thinking-in-models"
+   "thinking-in-models",
+   "tiny-habits"
   ],
   "安全边际": [
    "thinking-in-models"
@@ -76,13 +78,16 @@
    "discourse-on-method",
    "naval-almanack",
    "prisoners-of-our-thoughts",
-   "smart-mans-training"
+   "smart-mans-training",
+   "the-beauty-of-the-husband",
+   "tiny-habits"
   ],
   "自我怀疑与作品": [
    "discourse-on-method",
    "smart-mans-training",
    "socratic-apology",
-   "the-creative-act"
+   "the-creative-act",
+   "tiny-habits"
   ],
   "地图与疆域": [
    "analysis-and-thinking",
@@ -90,6 +95,7 @@
    "blue-ocean-strategy",
    "cost-and-choice",
    "reflection-and-history",
+   "the-beauty-of-the-husband",
    "thinking-in-models",
    "yujun-product-methodology"
   ],
@@ -111,6 +117,7 @@
    "road-to-serfdom",
    "smart-mans-training",
    "socratic-apology",
+   "the-beauty-of-the-husband",
    "the-book-of-elon",
    "yujun-product-methodology"
   ],
@@ -120,6 +127,7 @@
    "road-to-serfdom",
    "smart-mans-training",
    "socratic-apology",
+   "the-beauty-of-the-husband",
    "the-creative-act"
   ],
   "完成与发布": [
@@ -138,6 +146,7 @@
    "reflection-and-history",
    "road-to-serfdom",
    "socratic-apology",
+   "the-beauty-of-the-husband",
    "the-book-of-elon"
   ]
  },
@@ -1169,6 +1178,63 @@
    "weight": 0,
    "card_tokens_est": 1897
   },
+  "the-beauty-of-the-husband": {
+   "title": "丈夫之美",
+   "author": "安妮·卡森",
+   "editor": [],
+   "lens": "这股让你动不了的力，是在那个对象身上，还是本来就在你自己身上？如果要摆脱它，代价是什么？",
+   "thesis": "美不是一种审美而是一股力（\"Beauty convinces\"），所以爱不是选择、是\"存在本身的引力\"；而全书最后翻转——她遇见的美不在外面那张脸上，先在她自己心里，早被她吃掉了。",
+   "dimensions": [
+    "欲望与缺憾",
+    "身份与角色",
+    "地图与疆域",
+    "传统与共识",
+    "代价与机会成本"
+   ],
+   "triggers": [
+    "放不下一个人",
+    "明知道不该还是离不开",
+    "离不开他",
+    "为什么我会爱上这种人",
+    "被美骗了",
+    "颜控",
+    "被外表吸引",
+    "他长得好看",
+    "该不该嫁",
+    "嫁给爱情",
+    "婚姻里失去自己",
+    "离婚后放不下",
+    "还爱着前夫",
+    "出轨",
+    "被背叛",
+    "他一直在骗我",
+    "我为什么看不出来",
+    "记忆靠得住吗",
+    "我是不是记错了",
+    "谁在讲我的故事",
+    "我是不是活在别人的版本里",
+    "一直相信的那句话",
+    "书上说的对不对",
+    "美即是真",
+    "为自由付出代价",
+    "自由换安全",
+    "值不值得"
+   ],
+   "domains": [
+    "文学",
+    "诗歌",
+    "婚姻与爱情",
+    "美学",
+    "古典学"
+   ],
+   "source_type": "一手（作者本人著作，诗歌）",
+   "source_warning": "副标题自称 \"A Fictional Essay\"（虚构随笔），但正文一次也不交代哪些是自传、哪些是虚构——不能拿去对应作者本人的婚姻。它自称 essay 却坚持用诗的证据（\"证据是句子，不是数据\"是它的自辩，也是它免于被检验的护身符）。另：tango I 里 Duchamp 大玻璃的\"1912 年运输中压裂\"与通行说法（1926 年布鲁克林博物馆展出后压裂）冲突，书里未交代，引用时别照抄年份。",
+   "read_at": "2026-10-09",
+   "notes": "notes/the-beauty-of-the-husband.md",
+   "card": "the-beauty-of-the-husband.md",
+   "weight": 0,
+   "card_tokens_est": 2646
+  },
   "the-book-of-elon": {
    "title": "埃隆之书",
    "author": "埃隆·马斯克",
@@ -1345,6 +1411,64 @@
    "card": "thinking-in-models.md",
    "weight": 0,
    "card_tokens_est": 1535
+  },
+  "tiny-habits": {
+   "title": "Tiny Habits: The Small Changes That Change Everything",
+   "author": "B.J. 福格",
+   "editor": [],
+   "lens": "这件事缺的是提示、能力还是动机？能不能把它做小，小到不需要动机？",
+   "thesis": "行为 = 动机 × 能力 × 提示在同一刻凑齐；动机不可靠、能力和提示可以设计；习惯靠情绪长出来，不靠重复。",
+   "dimensions": [
+    "最弱环节",
+    "欲望与缺憾",
+    "自我怀疑与作品",
+    "二阶效应"
+   ],
+   "triggers": [
+    "坚持不下来",
+    "没毅力",
+    "三分钟热度",
+    "自律",
+    "管不住自己",
+    "立flag",
+    "新年计划",
+    "拖延",
+    "想做却不去做",
+    "养不成习惯",
+    "习惯养成",
+    "21天",
+    "打卡",
+    "早起",
+    "起不来",
+    "想早起",
+    "戒不掉",
+    "熬夜",
+    "刷手机停不下来",
+    "减肥坚持不了",
+    "每天运动",
+    "坚持跑步",
+    "微习惯",
+    "怎么改掉坏习惯",
+    "帮别人改习惯",
+    "孩子习惯",
+    "团队习惯",
+    "提不起劲",
+    "需要动力"
+   ],
+   "domains": [
+    "行为科学",
+    "心理学",
+    "自我管理",
+    "习惯养成",
+    "动机"
+   ],
+   "source_type": "一手（作者本人著作）",
+   "source_warning": "方法出自作者本人，但书里**没有参考文献表**（引注指向 TinyHabits.com/references），论据以自选个案与自我报告为主；第 5 章的多巴胺段落是解释框架，不是他做的实验。",
+   "read_at": "2026-10-08",
+   "notes": "notes/tiny-habits.md",
+   "card": "tiny-habits.md",
+   "weight": 0,
+   "card_tokens_est": 1956
   },
   "yujun-product-methodology": {
    "title": "俞军产品方法论",

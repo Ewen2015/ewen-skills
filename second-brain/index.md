@@ -18,13 +18,13 @@ analysis-and-thinking · beginning-of-infinity · historical-regimes · reflecti
 先问这是不是真取舍，还是被自己设成了二选一。
 blue-ocean-strategy · pale-blue-dot · yujun-product-methodology
 
-## 二阶效应（5 本）
+## 二阶效应（6 本）
 结果背后的结果，不假装连锁反应不存在——运行久了，机制会自己挑人。
-analysis-and-thinking · road-to-serfdom · the-book-of-elon · prisoners-of-our-thoughts · …另有 1 本，用 --dim 二阶效应 取
+analysis-and-thinking · tiny-habits · road-to-serfdom · the-book-of-elon · …另有 2 本，用 --dim 二阶效应 取
 
-## 最弱环节（3 本）
+## 最弱环节（4 本）
 乘法系统里，一项归零会把其余全部吃掉。
-analysis-and-thinking · the-book-of-elon · thinking-in-models
+analysis-and-thinking · tiny-habits · the-book-of-elon · thinking-in-models
 
 ## 安全边际（1 本）
 为不可逆的事留容错空间。
@@ -70,17 +70,17 @@ discourse-on-method · road-to-serfdom · cost-and-choice · smart-mans-training
 意义不是被赐予的，是人自己保管的，所以责任更重而不是更轻。
 socratic-apology · pale-blue-dot · prisoners-of-our-thoughts
 
-## 欲望与缺憾（4 本）
+## 欲望与缺憾（6 本）
 不得到就不快乐，是一份可以撤掉的约定。
-discourse-on-method · smart-mans-training · naval-almanack · prisoners-of-our-thoughts
+discourse-on-method · the-beauty-of-the-husband · tiny-habits · smart-mans-training · …另有 2 本，用 --dim 欲望与缺憾 取
 
-## 自我怀疑与作品（4 本）
+## 自我怀疑与作品（5 本）
 怀疑该放在哪里——既不轻易怀疑自己，也不把"我以为我知道"当成知道。
-discourse-on-method · socratic-apology · smart-mans-training · the-creative-act
+discourse-on-method · tiny-habits · socratic-apology · smart-mans-training · …另有 1 本，用 --dim 自我怀疑与作品 取
 
-## 地图与疆域（7 本）
+## 地图与疆域（8 本）
 报表、职级、简历都是地图，不是现实本身。
-analysis-and-thinking · beginning-of-infinity · cost-and-choice · reflection-and-history · …另有 3 本，用 --dim 地图与疆域 取
+analysis-and-thinking · the-beauty-of-the-husband · beginning-of-infinity · cost-and-choice · …另有 4 本，用 --dim 地图与疆域 取
 
 ## 自尊与自我修正（5 本）
 挡住改主意的往往不是无知，是自尊。
@@ -90,13 +90,13 @@ beginning-of-infinity · the-book-of-elon · cost-and-choice · prisoners-of-our
 分清运气和本事，别把均值回归当成趋势。
 blue-ocean-strategy · thinking-in-models
 
-## 代价与机会成本（8 本）
+## 代价与机会成本（9 本）
 选它放弃了什么——不做的代价要算，留着的代价也要算。
-analysis-and-thinking · beginning-of-infinity · road-to-serfdom · socratic-apology · …另有 4 本，用 --dim 代价与机会成本 取
+analysis-and-thinking · the-beauty-of-the-husband · beginning-of-infinity · road-to-serfdom · …另有 5 本，用 --dim 代价与机会成本 取
 
-## 身份与角色（6 本）
+## 身份与角色（7 本）
 这个选择在回答"我是谁"。
-road-to-serfdom · socratic-apology · historical-regimes · reflection-and-history · …另有 2 本，用 --dim 身份与角色 取
+the-beauty-of-the-husband · road-to-serfdom · socratic-apology · historical-regimes · …另有 3 本，用 --dim 身份与角色 取
 
 ## 完成与发布（1 本）
 什么时候算做完，以及发出去要付的代价。
@@ -106,6 +106,6 @@ the-creative-act
 整体不等于零件之和，拆开就看不见了。
 knowing-and-being
 
-## 传统与共识（10 本）
+## 传统与共识（11 本）
 共识怎么形成，又怎么被合理地推翻。
-discourse-on-method · analysis-and-thinking · beginning-of-infinity · road-to-serfdom · …另有 6 本，用 --dim 传统与共识 取
+discourse-on-method · analysis-and-thinking · the-beauty-of-the-husband · beginning-of-infinity · …另有 7 本，用 --dim 传统与共识 取
