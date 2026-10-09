@@ -79,6 +79,21 @@ PAGE_JS = r"""(() => JSON.stringify({
   outer_height: window.outerHeight,
 }))()"""
 
+# 虚拟列表的下一页请求**只在窗口是 key window 时才发**。而自动化跑起来时，宿主程序
+# （Codex 桌面端）在命令执行期间一直占着前台，Chrome 永远拿不到 key window，
+# `document.hasFocus()` 恒为 false —— 于是每次都只读到首屏 10 张、报 `partial`。
+# 2026-10-09 实测：在主 world 把 `document.hasFocus` 钉成 true 之后，滚动立刻能触发
+# 下一页，读全了 267 篇。这里只是让页面**以为**自己在前台，不改任何数据、
+# 也不点任何会改变状态的按钮，仍然是纯读操作。
+FOCUS_PATCH_JS = r"""(() => {
+  try {
+    Object.defineProperty(document, 'hasFocus', {value: () => true, configurable: true});
+  } catch (e) {
+    document.hasFocus = () => true;
+  }
+  return document.hasFocus();
+})()"""
+
 # 笔记列表是虚拟滚动的：首屏只挂约 10 张卡片，往下要靠滚动触发下一页。
 # 真正的滚动容器不是 window（window 的 scrollHeight == clientHeight，滚不动），
 # 而是 .note-card 的某个可滚动祖先（实测是 .list-container-box / .microapp-container）。
@@ -249,6 +264,8 @@ def goto_note_manager(page) -> None:
     """
     page.navigate(NOTE_MANAGER_URL)
     time.sleep(7)
+    # 导航会换掉文档，focus 补丁必须重新打一次。
+    page.evaluate(FOCUS_PATCH_JS)
 
 
 def scan_tab(page, tab: str,
@@ -321,6 +338,7 @@ def scan_drafts(page) -> dict:
     """草稿箱。注意：草稿存在浏览器本地，清浏览器数据就没了。"""
     page.navigate(PUBLISH_URL)
     time.sleep(7)
+    page.evaluate(FOCUS_PATCH_JS)
     opened = page.evaluate(OPEN_DRAFTS_JS)
     if not opened:
         return {"available": False,

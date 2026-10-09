@@ -565,20 +565,24 @@ def cmd_ready(args) -> int:
             "先跑 xhs_state.py queue，或用 --scheduled-verified 交一份人工清单")
     cad = plan.get("cadence") or {}
     now = datetime.now()
-    slot = next_free_slot(now, args.weeks,
-                          cad.get("weekdays") or [2, 6],
-                          cad.get("slots") or ["20:00"], scheduled)
+    weekdays = cad.get("weekdays") or [2, 6]
+    slots_txt = cad.get("slots") or ["20:00"]
+    # 一天两个时段时"发最近的那个"是**自动成立**的：`iter_slots` 把每天都时段展开后
+    # 排序，所以 `slots: ["12:30", "22:00"]` 就等于"先到先得"——今天 22:00 被占了，
+    # 下一个候选自然是明天 12:30，而不是 22:00 线一路排到窗口外（2026-10-09 用户规则）。
+    slot = next_free_slot(now, args.weeks, weekdays, slots_txt, scheduled)
+    # 排得进去 ≠ 排得上：平台只收窗口内的时刻，超窗会被悄悄换成别的时间。
+    window_end = now + timedelta(days=SCHEDULE_WINDOW_DAYS)
     add("有空闲时段", slot is not None,
         slot.strftime("%Y-%m-%d %H:%M") if slot else f"未来 {args.weeks} 周排满了")
     if slot is not None:
-        # 排得进去 ≠ 排得上：平台只收窗口内的时刻，超窗会被悄悄换成别的时间。
-        window_end = now + timedelta(days=SCHEDULE_WINDOW_DAYS)
         add("空档在平台定时窗口内", slot <= window_end,
             f"{slot:%Y-%m-%d %H:%M}"
             if slot <= window_end else
             f"{slot:%Y-%m-%d %H:%M} 超出平台窗口（今天 + {SCHEDULE_WINDOW_DAYS} 天，"
-            f"上限 {window_end:%Y-%m-%d}）——别排：平台会把超窗时间悄悄退回默认值，"
-            "而成品必须留存，等窗口放开再补排")
+            f"上限 {window_end:%Y-%m-%d}）——别排：平台会把超窗时间悄悄退回默认值。"
+            "窗口内的白天时段会在 slots 里被自动选中；若 slots 只有一档，"
+            "先按「一天两个时段」在 plan.json 的 cadence.slots 里补一档")
 
     passed = all(c["ok"] for c in checks)
     rep = {"generated_at": f"{datetime.now():%Y-%m-%d %H:%M}", "workspace": str(ws),
