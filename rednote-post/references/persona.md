@@ -77,6 +77,7 @@
 | 结构 | 段落推进（analysis-and-thinking、reflection-and-history、road-to-serfdom）／编号条目 3–5 条（creative-act、prisoners） |
 | emoji 密度 | 密集（creative-act 每条一个）／几乎不用（analysis-and-thinking） |
 | 引用形式 | 页码 `p19–20`／章号 `第 9 章`／不给位置只说"作者复盘时写道" |
+| 原文引不引 | 议论类只给中文；**文学／诗歌类给原句对照**——摘 2–3 句最有分量的，原文 + 译文并排（见 `cards.md` 的 `.orig`），正文里再引一句 |
 | 有无"怎么用"专节 | 有（creative-act 的「🧭 怎么用」）／无 |
 
 **不要把这些压成统一模板。** 判断依据是"这篇内容需要哪种"，不是"上次用了哪种"。

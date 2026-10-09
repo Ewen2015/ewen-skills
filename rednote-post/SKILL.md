@@ -92,6 +92,11 @@ metadata:
 处理完**贴给用户看一眼**再排版。选材判据与退路见
 [`references/cards.md`](references/cards.md#封面主体素材真实封面优先实拍照片或电子封面都行)。
 
+封面除了"纸底 + 书封"，还默认带一层**主题插画装饰**：书封**原版完整**地摆着，
+装饰画在它四周的两栏里（矢量线稿，由 [`scripts/cover_deco.py`](scripts/cover_deco.py) 生成，
+主题取自这本书自己的 2–3 个 motif）。做法与三条硬规矩见
+[`references/cards.md`](references/cards.md#封面改造书封原版展示主题装饰画在四周)。
+
 ### 4. 本地实测
 
 ```bash

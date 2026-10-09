@@ -75,6 +75,13 @@ h1{font-family:var(--serif);font-weight:600;font-size:74px;line-height:1.24;
 .use{margin-top:6px;font-size:24px;line-height:1.44;color:var(--accent);}
 
 /* ---- 两种信息块 -------------------------------------------------------- */
+.orig{margin-top:34px;position:relative;z-index:2;}          /* 原句对照：出处 → 原文 → 译文 */
+.orig .q{padding:20px 0;border-top:1px solid var(--rule);}
+.orig .q:last-of-type{border-bottom:1px solid var(--rule);}
+.orig .src{font-size:19px;letter-spacing:.18em;color:var(--accent2);}
+.orig .en{margin-top:9px;font-family:var(--serif);font-size:26px;line-height:1.5;color:var(--ink);}
+.orig .zh{margin-top:9px;font-size:24px;line-height:1.5;color:var(--ink2);}
+
 .quote{margin-top:40px;padding:30px 36px;background:var(--accent-wash);
   border-left:4px solid var(--accent);position:relative;z-index:2;}
 .quote b{display:block;font-family:var(--serif);font-size:50px;color:var(--accent);
@@ -87,7 +94,32 @@ h1{font-family:var(--serif);font-weight:600;font-size:74px;line-height:1.24;
 .box b{font-size:27px;letter-spacing:.14em;color:var(--accent);}
 .box p{margin-top:10px;font-size:24px;line-height:1.5;color:var(--ink2);}
 
-/* ---- 封面的主体图 ------------------------------------------------------ */
+/* ---- 封面的主体图（旧版：纸底 + 一张书封；新版走上面的 .stage/.deco/.book）---- */
 .photo{margin-top:46px;display:flex;justify-content:center;position:relative;z-index:2;}
 .photo img{width:566px;border-radius:3px;
   box-shadow:0 26px 54px -20px rgba(23,20,14,.40),0 4px 12px -6px rgba(23,20,14,.20);}
+
+/* ---- 封面的主题插画装饰层 ---------------------------------------------
+ * 书封**原版完整**地摆着，装饰只画在它四周（左右各 290px 的栏里），不覆盖、不加工书封。
+ * 装饰是一段矢量线稿（勾线在前、平涂在后、颜色收着），由 scripts/cover_deco.py 生成，
+ * 贴进 cover.html 里的 <svg class="deco">。换书就换那一段 SVG。
+ * 下面这组 --deco-* 与 --accent 分开管：--accent 永远只做信号。
+ */
+:root{
+  --deco-line:#2A2118;    /* 手绘线：深暖褐，不用纯黑 */
+  --deco-terra:#B0603F;   /* 陶土 */
+  --deco-olive:#7E7B4F;   /* 橄榄 */
+  --deco-gold:#C39A54;    /* 金 */
+  --deco-rose:#C08A72;    /* 灰玫瑰 */
+  --deco-cream:#F6EFE2;   /* 花瓣内圈 */
+}
+
+.stage{position:relative;height:845px;margin:30px -84px 0;}   /* -84：让装饰出血到卡片边 */
+.stage::before{content:"";position:absolute;inset:0;          /* 书周围一层极淡的暖晕，没有硬边 */
+  background:radial-gradient(78% 62% at 50% 51%,rgba(224,211,188,.95) 0%,
+    rgba(228,217,197,.78) 44%,rgba(234,225,208,.38) 72%,rgba(243,238,229,0) 100%);}
+.deco{position:absolute;inset:0;width:1080px;height:845px;display:block;}
+.deco .inked{filter:url(#ink);}        /* 一点点手抖，去掉"纯矢量"味；滤镜定义写在 cover.html 里 */
+.book{position:absolute;left:50%;top:29px;transform:translateX(-50%);width:500px;z-index:2;}
+.book img{width:100%;height:auto;display:block;border-radius:2px;
+  box-shadow:0 30px 58px -22px rgba(23,20,14,.46),0 5px 14px -7px rgba(23,20,14,.22);}

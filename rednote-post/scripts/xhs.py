@@ -90,6 +90,27 @@ TAG_FIND_JS = """(() => {
 # A trailing line of `#a #b #c` is how the body files carry the topics.
 TAG_LINE_RE = re.compile(r"^(?:#[^\s#]+\s*)+$")
 
+# 平台还没有这个词的时候，下拉里的第一项是 `#诺贝尔文学奖新建话题`。**默认不点它**：
+# 建一个新话题等于开一个没有内容、没有流量的空话题页，作者多半不是这个意思。
+# 只有调用方明确要求（环境变量 `XHS_NEW_TOPIC=1`）时才点——那是"这个词平台确实没有，
+# 我就要它"的显式决定（用户 2026-10-09 对 `#诺贝尔文学奖` 就是这么说的）。
+TAG_NEW_JS = """(() => {
+  const q = %s;
+  const box = document.getElementById('creator-editor-topic-container');
+  if (!box) return null;
+  for (const el of box.querySelectorAll('.item')) {
+    if ((el.textContent || '').trim() !== '#' + q + '新建话题') continue;
+    const r = el.getBoundingClientRect();
+    if (r.width <= 0 || r.height <= 0) continue;
+    const x = r.left + r.width / 2, y = r.top + r.height / 2;
+    if (x < 0 || y < 0 || x > innerWidth || y > innerHeight) continue;
+    const hit = document.elementFromPoint(x, y);
+    if (!hit || !(hit === el || el.contains(hit) || hit.contains(el))) continue;
+    return JSON.stringify({text: (el.textContent || '').trim(), x: x, y: y});
+  }
+  return null;
+})()"""
+
 # Move the caret to the end of the body and open a fresh paragraph for the tags.
 INSERT_TAG_LINE_JS = """(() => {
   const el = document.querySelector(%s);
@@ -413,6 +434,21 @@ def commit_tag(page, tag: str, timeout: float = 4.0) -> bool:
             print(f"    [{tag}] 点了但没生效（第 {tries} 次，页面 "
                   f"{chip_texts(page)[-2:]}）", file=sys.stderr)
         time.sleep(0.3)
+
+    # 精确话题不存在时（平台没有这个词），显式要求才去点「新建话题」。
+    if os.environ.get("XHS_NEW_TOPIC"):
+        found = page.evaluate(TAG_NEW_JS % json.dumps(tag))
+        if found:
+            item = json.loads(found)
+            try:
+                page.mouse_click(item["x"], item["y"])
+            except Exception:
+                return False
+            time.sleep(1.0)
+            if f"#{tag}[话题]#" in chip_texts(page):
+                return True
+            if debug:
+                print(f"    [{tag}] 新建话题点了也没生效", file=sys.stderr)
     return False
 
 
