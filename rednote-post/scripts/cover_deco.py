@@ -19,12 +19,15 @@
 3. **强调色只做信号。** `--accent`（#FD6408）在装饰里最多出现一两处小花小苞；
    大面积铺色一律用 --deco-terra / olive / gold / rose。
 
-## 加一本新书
+## 加一本新书（**两个预设都不是通用的**）
 
-`garland()` 是《The Beauty of the Husband》那一版的构图，也是模板：四个角各一簇
+`garland()` 与 `notes()` **都是《The Beauty of the Husband》那一版的构图**，留作模板与零件库；
+直接把它们当新书的装饰交出去，会被 `check_content.py` 判红（"与别篇装饰重合"）。
+`garland()` 的骨架是：四个角各一簇
 `spri`（花枝）→ 中段用一条向外弯的 `sprig` 当垂花彩带把上下连起来 → 再散几个音符/小果。
 换书就换 motif：把主题拆成 2–3 个能画成图形的东西（这本书是"29 首探戈 → 音符"、
 "美与伤口 → 玫瑰与刺"、"画布龟裂 → 裂纹"），照着改坐标即可。
+改完把 motif 写进 `manifest.json` 的 `cover.deco.motifs`（见 references/cards.md）。
 """
 
 import math, random
@@ -267,17 +270,21 @@ def notes():
 
 
 PRESETS = {"garland": garland, "notes": notes}
+PRESET_NOTE = ("两个预设都是《The Beauty of the Husband》那一版，只当底版／零件库——"
+               "换书要重拆 motif 与坐标，照搬会被 check_content.py 判红")
 
 
 def main(argv=None):
     import argparse, sys
     ap = argparse.ArgumentParser(description="生成封面主题插画装饰层的 SVG")
-    ap.add_argument("--preset", default="garland", help="构图预设：" + "、".join(PRESETS))
+    ap.add_argument("--preset", default="garland",
+                    help="构图预设：" + "、".join(PRESETS) + "（都非通用，见 --list）")
     ap.add_argument("--out", help="写到这里；不给就打到 stdout")
     ap.add_argument("--list", action="store_true", help="列出可用预设")
     a = ap.parse_args(argv)
     if a.list:
-        for name in PRESETS: print(name)
+        print(PRESET_NOTE)
+        for name in PRESETS: print(f"  {name}")
         return 0
     if a.preset not in PRESETS:
         sys.exit(f"没有这个预设：{a.preset}（可选：{'、'.join(PRESETS)}）")

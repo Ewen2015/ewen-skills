@@ -16,6 +16,8 @@ Rules checked (source: references/cards.md, references/copywriting.md, SKILL.md)
     4. 封面素材存在、是 RGB、宽度达到交付画布下限
     5. 成品目录里只有一个标题／正文版本（没有 body-v2.txt 这类并行版本）
     6. 正文里没有人设的"反面清单"词——AI 味连接词与行话（见 references/persona.md 第 5 节）
+    7. 封面带主题装饰层，且在 manifest 里声明了这本书的 motifs（默认每本都加，见 cards.md）
+    8. 装饰层**不是别篇那一版**——两个 post 的装饰路径重合度过高就判红（"不是都加一样的"）
 
 Not machine-checkable here, only warned about: 封面"是不是这本书真实存在的封面"——那需要
 一条声明字段，见 manifest.json 的 cover.source。
@@ -34,6 +36,12 @@ HALF_BAKED = ["需查证", "待核实", "待考", "据称", "据传", "未经核
 
 ACCENT_WANT = "FD6408"
 COVER_FLOOR = 900
+
+# 封面的主题装饰层（references/cards.md「封面改造」）。默认每本都加，主题必须从书里来。
+DECO_SEL_RE = re.compile(r'<svg[^>]*class="deco"[^>]*>.*?</svg>', re.S)
+D_ATTR_RE = re.compile(r'\sd="([^"]+)"')
+DECO_MIN_PATHS = 40        # 整版构图 200 上下、最轻的一版 75；低于 40 多半是只粘了一块
+DECO_REUSE_JACCARD = 0.5   # 两篇装饰的路径重合到一半，就是"把上一版拿过来用了"
 
 # references/persona.md 第 5 节「反面清单」。一出现就不像这个号，不区分上下文。
 AI_SMELL = ["综上所述", "总而言之", "值得注意", "不难发现", "让我们一起", "不得不说",
@@ -152,6 +160,84 @@ def scan_cover(post: Path, manifest: dict) -> tuple[bool, str, str | None]:
     return True, f"{src.name} {w}px {mode}", note
 
 
+def deco_paths(html: str) -> set[str]:
+    """封面 html 里装饰层用到的 SVG 路径（归一化空白后去重）。
+
+    比对"两篇的装饰是不是同一张"就看这个：坐标一改，路径串就变。
+    """
+    m = DECO_SEL_RE.search(html)
+    if not m:
+        return set()
+    return {re.sub(r"\s+", "", d) for d in D_ATTR_RE.findall(m.group(0))}
+
+
+def deco_motifs(manifest: dict) -> list[str]:
+    cov = manifest.get("cover") if isinstance(manifest, dict) else None
+    deco = cov.get("deco") if isinstance(cov, dict) else None
+    if not isinstance(deco, dict):
+        return []
+    m = deco.get("motifs")
+    if isinstance(m, str):
+        return [m.strip()] if m.strip() else []
+    return [str(x).strip() for x in m if str(x).strip()] if isinstance(m, list) else []
+
+
+def scan_deco(post: Path, manifest: dict) -> tuple[bool, str]:
+    """封面默认带主题装饰层，且要在 manifest 里说清这本书的 motifs。
+
+    装饰是判断，脚本判不了"motif 是不是真从书里拆出来的"；能判的是：有没有、贴全没有、
+    有没有**声明**。声明这一栏的作用就是逼出那次判断，并留下可复核的痕迹。
+    """
+    paths = deco_paths(read(post / "build" / "01-cover.html"))
+    motifs = deco_motifs(manifest)
+    if not paths:
+        return False, ("build/01-cover.html 里没有 <svg class=\"deco\"> 装饰层——"
+                       "封面默认带一层，见 references/cards.md「封面改造」")
+    if len(paths) < DECO_MIN_PATHS:
+        return False, ("装饰层只有 %d 条路径，像是只贴了一部分（整版 200 上下、最轻的预设 75；"
+                       "下限 %d）" % (len(paths), DECO_MIN_PATHS))
+    if len(motifs) < 2:
+        return False, ("manifest.json 缺 cover.deco.motifs——写清这本书拆出来的 2–3 个 motif，"
+                       "如 [\"29 首探戈 → 音符\", \"美与伤口 → 玫瑰与刺\"]")
+    base = ""
+    cov = manifest.get("cover") if isinstance(manifest, dict) else None
+    deco = cov.get("deco") if isinstance(cov, dict) else None
+    if isinstance(deco, dict) and deco.get("based_on"):
+        base = "｜底版：%s" % deco["based_on"]
+    return True, "%d 条路径｜motif：%s%s" % (len(paths), "、".join(motifs[:3]), base)
+
+
+def scan_deco_reuse(post: Path) -> tuple[bool, str]:
+    """"都加"不等于"都加一样的"：装饰层不能是别篇那一张。
+
+    拿同工作区里其它 post 的封面比路径集合的 Jaccard。旧篇（还没这项要求之前做的）
+    没有装饰层，直接跳过；找不到兄弟目录时只是不检查，不判失败。
+    """
+    mine = deco_paths(read(post / "build" / "01-cover.html"))
+    if not mine:
+        return True, ""
+    roots = [post.parent]
+    pub = post.parent.parent / "published"
+    if pub.is_dir():
+        roots.append(pub)
+    for root in roots:
+        try:
+            sibs = sorted(root.iterdir())
+        except OSError:
+            continue
+        for sib in sibs:
+            if sib == post or not (sib / "build").is_dir():
+                continue
+            other = deco_paths(read(sib / "build" / "01-cover.html"))
+            if not other:
+                continue
+            j = len(mine & other) / len(mine | other)
+            if j >= DECO_REUSE_JACCARD:
+                return False, ("装饰层与《%s》重合 %.0f%%——motifs 要从这本书来，别沿用上一版"
+                               "（可以拿它当底版，但要重画构图）" % (sib.name, j * 100))
+    return True, ""
+
+
 def scan_persona(post: Path) -> tuple[bool, str]:
     """人设的反面清单 + 出处行在不在。词表见 references/persona.md 第 5 节。"""
     lines = [ln.strip() for ln in read(post / "body.txt").splitlines() if ln.strip()]
@@ -208,6 +294,8 @@ def main() -> int:
     add("封面素材可用（RGB／宽度）", ok, detail)
     if note:
         warns.append(note)
+    add("封面装饰层按本书重画", *scan_deco(post, manifest))
+    add("装饰层不是别篇那一版", *scan_deco_reuse(post))
     add("只有一个版本", *scan_versions(post))
     add("人设：无 AI 味词", *scan_persona(post))
 

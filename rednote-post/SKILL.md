@@ -92,9 +92,12 @@ metadata:
 处理完**贴给用户看一眼**再排版。选材判据与退路见
 [`references/cards.md`](references/cards.md#封面主体素材真实封面优先实拍照片或电子封面都行)。
 
-封面除了"纸底 + 书封"，还默认带一层**主题插画装饰**：书封**原版完整**地摆着，
-装饰画在它四周的两栏里（矢量线稿，由 [`scripts/cover_deco.py`](scripts/cover_deco.py) 生成，
-主题取自这本书自己的 2–3 个 motif）。做法与三条硬规矩见
+封面**每本都带**一层**主题插画装饰**：书封**原版完整**地摆着，装饰画在它四周的两栏里
+（矢量线稿，由 [`scripts/cover_deco.py`](scripts/cover_deco.py) 生成）。
+**装饰的主题必须从这本书自己拆出来**（2–3 个 motif），不是套现成的一版——`garland` / `notes`
+两个预设都是《丈夫之美》那一版，只当底版参考，直接照搬会被判红。
+拆出来的 motif 写进 `manifest.json` 的 `cover.deco.motifs`，`check_content.py` 会查
+「有没有、贴全没有、声明没有、**是不是别篇那一张**」四项。做法与三条硬规矩见
 [`references/cards.md`](references/cards.md#封面改造书封原版展示主题装饰画在四周)。
 
 ### 4. 本地实测
