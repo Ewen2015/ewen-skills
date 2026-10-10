@@ -1,0 +1,31 @@
+{"id":"q01","family":"vocab","kind":"判断","q":"坚持不下来，想早起但总是三分钟热度","gold":["tiny-habits"],"accept":[],"why":"triggers 直给：坚持不下来/三分钟热度/早起"}
+{"id":"q02","family":"paraphrase","kind":"判断","q":"我没毅力，是不是性格问题","gold":["tiny-habits"],"accept":[],"why":"换说法，不含 triggers 原词"}
+{"id":"q03","family":"paraphrase","kind":"判断","q":"能不能不靠动机也让行为发生","gold":["tiny-habits"],"accept":[],"why":"指向 B=MAP 的核心机制","tuned":true}
+{"id":"q04","family":"vocab","kind":"判断","q":"已经投了很多钱进去，现在还该不该停","gold":["cost-and-choice"],"accept":["yujun-product-methodology"],"why":"沉没成本；机会成本那本也算对"}
+{"id":"q05","family":"paraphrase","kind":"判断","q":"机会成本到底该算谁的账","gold":["cost-and-choice"],"accept":["yujun-product-methodology"],"why":"主观成本 vs 决策者"}
+{"id":"q06","family":"vocab","kind":"判断","q":"要不要辞职做独立开发","gold":["naval-almanack"],"accept":["hackers-and-painters"],"why":"triggers 直给","tuned":true}
+{"id":"q07","family":"paraphrase","kind":"判断","q":"用时间换钱这件事能撑多久","gold":["naval-almanack"],"accept":[],"why":"杠杆与专长","tuned":true}
+{"id":"q08","family":"vocab","kind":"判断","q":"我在大公司待不下去，是不是该自己干","gold":["hackers-and-painters"],"accept":["naval-almanack","the-book-of-elon"],"why":"创造 vs 管理","tuned":true}
+{"id":"q09","family":"vocab","kind":"判断","q":"创作卡住了，写不出来","gold":["the-creative-act"],"accept":["knowing-and-being"],"why":"triggers 直给","tuned":true}
+{"id":"q10","family":"paraphrase","kind":"判断","q":"经验越多是不是越难做出新东西","gold":["the-creative-act"],"accept":[],"why":"清零与重启","tuned":true}
+{"id":"q11","family":"vocab","kind":"事实","q":"说不清楚但我知道，这种直觉能信吗","gold":["knowing-and-being"],"accept":[],"why":"意会与不可言说"}
+{"id":"q12","family":"paraphrase","kind":"判断","q":"为什么把知道的事写成清单反而失真","gold":["knowing-and-being"],"accept":["thinking-in-models"],"why":"焦点与附带","tuned":true}
+{"id":"q13","family":"vocab","kind":"判断","q":"我总把别人的评价当标准，怎么停","gold":["smart-mans-training"],"accept":[],"why":"triggers 直给","tuned":true}
+{"id":"q14","family":"vocab","kind":"判断","q":"不会拒绝别人，老好人怎么办","gold":["smart-mans-training"],"accept":[],"why":"triggers 直给"}
+{"id":"q15","family":"vocab","kind":"判断","q":"工作没意思，提不起劲，很倦怠","gold":["prisoners-of-our-thoughts"],"accept":["the-creative-act"],"why":"意义自赋"}
+{"id":"q16","family":"vocab","kind":"判断","q":"人活着有什么意义","gold":["pale-blue-dot"],"accept":["prisoners-of-our-thoughts","socratic-apology"],"why":"尺度拉大"}
+{"id":"q17","family":"paraphrase","kind":"判断","q":"我很渺小，做这些有什么用","gold":["pale-blue-dot"],"accept":[],"why":"换说法，不含 triggers 原词","tuned":true}
+{"id":"q18","family":"vocab","kind":"判断","q":"行业都内卷，打价格战，只能降价吗","gold":["blue-ocean-strategy"],"accept":[],"why":"triggers 直给"}
+{"id":"q19","family":"paraphrase","kind":"判断","q":"怎么判断一个决定后面的连锁反应","gold":["thinking-in-models"],"accept":["analysis-and-thinking","the-book-of-elon"],"why":"二阶效应"}
+{"id":"q20","family":"vocab","kind":"判断","q":"流程太复杂，效率上不去，先动哪一环","gold":["the-book-of-elon"],"accept":["analysis-and-thinking","thinking-in-models"],"why":"最弱环节"}
+{"id":"q21","family":"vocab","kind":"判断","q":"好心办坏事，为什么越改越乱","gold":["road-to-serfdom"],"accept":["historical-regimes","reflection-and-history"],"why":"二阶效应＋计划"}
+{"id":"q22","family":"paraphrase","kind":"判断","q":"被安排的人生，和自己拿主意，哪个更划算","gold":["road-to-serfdom"],"accept":["hackers-and-painters","smart-mans-training"],"why":"自治与被计划"}
+{"id":"q23","family":"vocab","kind":"事实","q":"房价为什么这么高，钱是不是印多了","gold":["analysis-and-thinking"],"accept":[],"why":"triggers 直给"}
+{"id":"q24","family":"paraphrase","kind":"判断","q":"我看到的只是被写下来的版本，怎么证明它不真","gold":["reflection-and-history"],"accept":["beginning-of-infinity"],"why":"文本与表征"}
+{"id":"q25","family":"vocab","kind":"事实","q":"大家都这么说，我凭什么相信","gold":["discourse-on-method"],"accept":["socratic-apology","reflection-and-history"],"why":"怀疑方法"}
+{"id":"q26","family":"vocab","kind":"判断","q":"我特别有把握，会不会是高估自己","gold":["socratic-apology"],"accept":["discourse-on-method"],"why":"自我修正"}
+{"id":"q27","family":"vocab","kind":"判断","q":"现在跟以前不一样了，活在当下对不对","gold":["historical-regimes"],"accept":["analysis-and-thinking"],"why":"triggers 直给"}
+{"id":"q28","family":"vocab","kind":"判断","q":"想不出来，认命了，觉得无解","gold":["beginning-of-infinity"],"accept":[],"why":"triggers 直给"}
+{"id":"q29","family":"paraphrase","kind":"判断","q":"怎么把用户要什么，换成能算的账","gold":["yujun-product-methodology"],"accept":["cost-and-choice","blue-ocean-strategy"],"why":"成本可见性"}
+{"id":"q30","family":"vocab","kind":"判断","q":"放不下一个人，明知道不该还是离不开","gold":["the-beauty-of-the-husband"],"accept":[],"why":"triggers 直给"}
+{"id":"q31","family":"paraphrase","kind":"判断","q":"要不要信任经验，这件事两本书给了相反答案吗","gold":["the-creative-act"],"accept":["naval-almanack"],"why":"跨书对撞：清空 vs 积累","tuned":true}

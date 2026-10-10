@@ -1,0 +1,35 @@
+{
+  "name": "reading-pkm",
+  "version": "0.1.0",
+  "description": "A Codex plugin that packages eight skills for turning the books you have read into lenses that get called when you think. Seek / Sense / Share as an executable pipeline: fetch a book, read it with Adler's method, file it into a second brain, render it for a channel, then measure the loop.",
+  "author": {
+    "name": "Ewen"
+  },
+  "license": "MIT",
+  "keywords": [
+    "pkm",
+    "reading",
+    "second-brain",
+    "book-notes",
+    "knowledge-management"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Reading PKM",
+    "shortDescription": "Turn read books into callable lenses",
+    "longDescription": "A personal reading knowledge pipeline built from eight Codex skills. Get a book (book-fetch), read it with Adler's method (read-a-book), file its cards and notes into a second brain that answers questions with citations (second-brain), design the layout (scandinavian-style), turn it into a post (rednote-post), schedule it (rednote-assistant), keep the copy in your own voice (human-writing), and measure the whole loop (rsi-reading).\n\nThe library lives in ./library as plain markdown, cards load on demand, and retrieval is deterministic standard-library code: no vector database, no embeddings, no resident service.",
+    "developerName": "Ewen",
+    "category": "Productivity",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "用我读过的书，帮我判断这件事该不该做",
+      "把这本书做成一页纸的读书笔记",
+      "这个月的笔记排期还差几篇"
+    ],
+    "brandColor": "#1F1F1F",
+    "screenshots": []
+  }
+}

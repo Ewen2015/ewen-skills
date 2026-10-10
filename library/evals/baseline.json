@@ -1,0 +1,39 @@
+{
+ "k": 3,
+ "overall": {
+  "cases": 31,
+  "k": 3,
+  "p_at_k": 0.4624,
+  "r_at_k": 0.7544,
+  "mrr": 0.8925,
+  "dim_route_rate": 0.9355
+ },
+ "holdout": {
+  "cases": 21,
+  "k": 3,
+  "p_at_k": 0.4921,
+  "r_at_k": 0.7561,
+  "mrr": 0.8889,
+  "dim_route_rate": 0.9048
+ },
+ "by_family": {
+  "paraphrase": {
+   "cases": 12,
+   "k": 3,
+   "p_at_k": 0.4444,
+   "r_at_k": 0.7273,
+   "mrr": 0.875,
+   "dim_route_rate": 0.9167
+  },
+  "vocab": {
+   "cases": 19,
+   "k": 3,
+   "p_at_k": 0.4737,
+   "r_at_k": 0.7714,
+   "mrr": 0.9035,
+   "dim_route_rate": 0.9474
+  }
+ },
+ "misses": [],
+ "caveat": "这个数只回答「候选里有没有该出现的书」，不回答答案好不好。gold 是人读完卡片后写下的；其中 vocab 家族的题面有相当一部分取自卡片 triggers，所以整体分偏高，看 paraphrase 家族更接近真实。题量不大，一道题就值好几个百分点——别在小数点上做文章，只看「改词表前后同一套题有没有变好」。标了 tuned 的题，是因为它的问法后来被补进了 dimensions.md——这些题只证明词表补对了，不证明泛化；看 holdout 那一行才知道换一种说法还灵不灵。"
+}

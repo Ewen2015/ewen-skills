@@ -7,3 +7,8 @@ state/
 
 # README 的截图源：未裁剪的原始截图只留在本地，进仓库的是裁好的 docs/profile.png
 docs/profile-raw.png
+
+# 第二大脑的 recall 本地日志：只用来找"从没被取用的卡"，不入库
+library/.recall-log.jsonl
+# 数据面搬家前的老路径（README 里说明过沿革），留着防手滑把日志提交进去
+second-brain/.recall-log.jsonl

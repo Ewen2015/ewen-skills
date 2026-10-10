@@ -2,7 +2,8 @@
 
 > 把读过的书，变成下次思考时**会被调用**的视角。
 
-一条个人阅读的知识管理流水线，由七个 [Codex](https://developers.openai.com/codex/) skill 拼成。
+一条个人阅读的知识管理流水线：**八个 [Codex](https://developers.openai.com/codex/) skill 打成一个
+Codex plugin**（`.codex-plugin/plugin.json`），装一次全部就位，也可以只把某一个 skill 拷走用。
 它把 Harold Jarche 的 **Seek › Sense › Share** 模型落成能跑的东西：能被自动化的交给机器，
 不能被自动化的——判断与品味——留在人这里。
 
@@ -48,8 +49,8 @@ AI 对这条链的冲击是不均匀的：
 
 | Skill | 做什么 |
 | --- | --- |
-| [`book-fetch`](./book-fetch) | 把「我要读某本书」变成「手上有一个能直接做笔记的电子书文件」：检索候选、剔除李鬼（摘编／学习指南）、六维综合评分、解析封面与书目核对，**把格式和封面摆给用户确认之后**才下载，下载完洗掉文件名里的来源后缀并登记进待读队列。书源适配器配置在仓库外——**仓库本身不含任何书源信息**。 |
-| [`read-a-book`](./read-a-book) 的检视阅读 | 任何一本书的第一步：几分钟建一张地图，回答"这本书在谈什么、值不值得细读"。 |
+| [`book-fetch`](./skills/book-fetch) | 把「我要读某本书」变成「手上有一个能直接做笔记的电子书文件」：检索候选、剔除李鬼（摘编／学习指南）、六维综合评分、解析封面与书目核对，**把格式和封面摆给用户确认之后**才下载，下载完洗掉文件名里的来源后缀并登记进待读队列。书源适配器配置在仓库外——**仓库本身不含任何书源信息**。 |
+| [`read-a-book`](./skills/read-a-book) 的检视阅读 | 任何一本书的第一步：几分钟建一张地图，回答"这本书在谈什么、值不值得细读"。 |
 
 这两个 skill 都**不替用户做决定**：`book-fetch` 只把候选和证据摆好，`read-a-book` 一律从检视阅读开始。
 
@@ -57,11 +58,11 @@ AI 对这条链的冲击是不均匀的：
 
 | Skill | 做什么 | 示例 |
 | --- | --- | --- |
-| [`read-a-book`](./read-a-book) | 用《如何阅读一本书》(Adler & Van Doren) 的方法执行真实阅读：检视 → 分析 → 主题，每本书都梳理来龙去脉（写作目的、所属思潮、影响它的与它影响的），产出结构化笔记；可按需压成**一页纸（one-pager）**。 | <img src="docs/skills/read-a-book.png" width="220" alt="《思考的框架》三册一页纸读书笔记：三栏分别放这本书在回答什么、三册结构与 48 个模型、上游与下游的隐身人"> |
-| [`second-brain`](./second-brain) | 用已经读过的书回答一个具体问题：挑出真正相关的 1–2 本，用它们的思想视角参与思考，每个观点都带出处与作者。**交付的是意见，不是读书报告。** 书库按「index 当注册表、卡片按需加载」组织——一次问答约 3–5K tokens，而不是把整个书库塞进上下文。 | — |
-| [`scandinavian-style`](./scandinavian-style) | 斯堪的纳维亚风格的设计系统：16:9 版式网格、字号层级、页脚规范、配色与图表规则，附可直接改的单页 HTML 模板，以及**密集单页（one-pager）**三栏模式与实测校验脚本。不带任何品牌资产。 | <img src="docs/skills/scandinavian-style.png" width="220" alt="16:9 单页模板渲染结果：章节标签、32pt 标题、正文与 5 节点时间线，右侧边栏列表，底部四元素页脚"> |
+| [`read-a-book`](./skills/read-a-book) | 用《如何阅读一本书》(Adler & Van Doren) 的方法执行真实阅读：检视 → 分析 → 主题，每本书都梳理来龙去脉（写作目的、所属思潮、影响它的与它影响的），产出结构化笔记；可按需压成**一页纸（one-pager）**。 | <img src="docs/skills/read-a-book.png" width="220" alt="《思考的框架》三册一页纸读书笔记：三栏分别放这本书在回答什么、三册结构与 48 个模型、上游与下游的隐身人"> |
+| [`second-brain`](./skills/second-brain) | 用已经读过的书回答一个具体问题：挑出真正相关的 1–2 本，用它们的思想视角参与思考，每个观点都带出处与作者。**交付的是意见，不是读书报告。** 书库按「index 当注册表、卡片按需加载」组织——一次问答约 3–5K tokens，而不是把整个书库塞进上下文。 | — |
+| [`scandinavian-style`](./skills/scandinavian-style) | 斯堪的纳维亚风格的设计系统：16:9 版式网格、字号层级、页脚规范、配色与图表规则，附可直接改的单页 HTML 模板，以及**密集单页（one-pager）**三栏模式与实测校验脚本。不带任何品牌资产。 | <img src="docs/skills/scandinavian-style.png" width="220" alt="16:9 单页模板渲染结果：章节标签、32pt 标题、正文与 5 节点时间线，右侧边栏列表，底部四元素页脚"> |
 
-书库里现在有 **17 本书**的笔记与卡片。
+书库里现在有 **22 本书**的笔记与卡片。
 
 ### SHARE · 分享 —— 同一份素材，多种 UI
 
@@ -70,14 +71,15 @@ Jarche 提醒 share 要讲分寸：**知道什么时候、对谁分享**，才�
 
 | Skill | 做什么 | 示例 |
 | --- | --- | --- |
-| [`rednote-post`](./rednote-post) | 把一份素材做成小红书图文笔记并发到自己的账号：写标题与正文、生成 1080×1440 卡片图、**实测**排版（字号下限／溢出／压页脚／孤字换行）、经用户确认后用浏览器桥接发布并回读核验。含卡片模板、渲染校验脚本与发布 CLI。 | <img src="docs/skills/rednote-post.png" width="220" alt="小红书图文的封面与两张内页卡片：你不是不够聪明，是手里的模型太少"> |
-| [`rednote-assistant`](./rednote-assistant) | 小红书发布排期助理：定更新频率与发布时段、看平台上有没有未来定时发布的笔记、盘草稿箱、算现有成品能撑几周、指出排期缺口、按账号自己的历史数据挑最佳发布时间。**只排期，不写不发**——文案与发布走 `rednote-post`。 | <img src="docs/skills/rednote-assistant.png" width="220" alt="排期体检报告：每周 2 篇的计划下，未来 3 周排期表标出 5 个空档与已定时的笔记，并给出素材积累量目标与提醒建议"> |
+| [`rednote-post`](./skills/rednote-post) | 把一份素材做成小红书图文笔记并发到自己的账号：写标题与正文、生成 1080×1440 卡片图、**实测**排版（字号下限／溢出／压页脚／孤字换行）、经用户确认后用浏览器桥接发布并回读核验。含卡片模板、渲染校验脚本与发布 CLI。 | <img src="docs/skills/rednote-post.png" width="220" alt="小红书图文的封面与两张内页卡片：你不是不够聪明，是手里的模型太少"> |
+| [`rednote-assistant`](./skills/rednote-assistant) | 小红书发布排期助理：定更新频率与发布时段、看平台上有没有未来定时发布的笔记、盘草稿箱、算现有成品能撑几周、指出排期缺口、按账号自己的历史数据挑最佳发布时间。**只排期，不写不发**——文案与发布走 `rednote-post`。 | <img src="docs/skills/rednote-assistant.png" width="220" alt="排期体检报告：每周 2 篇的计划下，未来 3 周排期表标出 5 个空档与已定时的笔记，并给出素材积累量目标与提醒建议"> |
+| [`human-writing`](./skills/human-writing) | 写作层：把稿子改写成"人话"——去掉 AI 味（连接词／行话／排比三连／每段一句金句／匀称到没有起伏），再落到一份**给定的人设**上（先读人设、抽声音指纹、写完出声念）。**不绑定账号**：调用方传自己的人设文件，`rednote-post` 是第一个调用方。含可直接跑的 AI 味机判脚本（`rednote-post` 的 `check_content.py` 直接复用它，不再自抄词表）。 | — |
 
 ### 之上的一层
 
 | Skill | 做什么 |
 | --- | --- |
-| [`rsi-reading`](./rsi-reading) | 把「读书」这条链当成闭环做递归自我改进：度量 read-a-book → 沉淀 → 渲染与分发 → second-brain 取用 的流水线，找断点、给改进项排优先级、跑一次只改一个变量的最小试验并记账。分发按「内容模型／载体／渠道」三层拆开——**小红书只是其中一种 UI 与渠道**。附只读观测仪（`rsi.py`）与三份活文档。**它不读书、不写笔记、不发帖**——改的是流程本身。 |
+| [`rsi-reading`](./skills/rsi-reading) | 把「读书」这条链当成闭环做递归自我改进：度量 read-a-book → 沉淀 → 渲染与分发 → second-brain 取用 的流水线，找断点、给改进项排优先级、跑一次只改一个变量的最小试验并记账。分发按「内容模型／载体／渠道」三层拆开——**小红书只是其中一种 UI 与渠道**。附只读观测仪（`rsi.py`）与三份活文档。**它不读书、不写笔记、不发帖**——改的是流程本身。 |
 
 ## 留在 Ewen 的那一步：读书的审美
 
@@ -121,43 +123,112 @@ Share 段目前只有一条渠道跑通：小红书，账号 **司马读书**（
 
 ![一篇笔记的五张卡片](docs/case-post.png)
 
+## 架构
+
+```mermaid
+flowchart LR
+    Q["问题"] --> R["brain.py recall"]
+    R --> ARMS["四路各投一票<br/>维度 · 字面 · 小节 · 关系边"]
+    ARMS --> RRF["RRF 名次融合<br/>不手调权重"]
+    RRF --> C["候选 6 本<br/>命中 · 置信 · 边界 · 可当反方"]
+    C --> ANS["只读 1–2 张卡<br/>给出带出处的意见"]
+    DIMS["dimensions.md<br/>25 维，人为固定"] -.-> ARMS
+    IDX["index.json<br/>随书数涨，不进上下文"] -.-> ARMS
+    EV["evals：31 题 + 基线"] -.闸门.-> R
+    ANS --> SB["library/books/ 卡片 + library/notes/ 原笔记"]
+```
+
+**一条不变量：一次问答进上下文的东西，与书库规模无关。** 书从 22 本涨到 1000 本，
+`library/index.md` 仍是 ≈2K tokens（它按维度排，规模只随维度数变），随书数增长的
+`index.json` 从不进上下文，真正读进去的永远是 1–2 张卡。省下的这笔上下文，是用**路由准确度**付的，
+所以重点不是"检索得全"而是"路由得准"。
+
+**五个面各管一件事。** Skill 管"怎么想"，文件管"想什么"（`library/books/` 是内容层、`library/notes/` 是深度层、
+`library/evals/` 是题集），`brain.py` 管"找得到"，`dimensions.md` 是人唯一的调参旋钮，`rsi.py` 只读地量闭环。
+真相只有 markdown——`index.md`／`index.json` 都是生成物，删了能重建。
+
+**机器只做确定性的事。** `brain.py` 纯标准库、零 LLM：关系边是受控词表 + `《书名》`的正则解析，
+排序是四路名次融合，小节命中按覆盖度打分。凡是能变成工具输出的纪律（置信、边界、可当反方）
+就不留在散文里等模型记性。
+
+**明确不引入的东西。** 没有向量库与嵌入、没有常驻服务、没有数据库：判断型问题靠维度表取视野，
+而不是靠相似度；一次问答 4–9K tokens，而不是把书库读一遍（22 本全读约 47K，且随书数线性涨）。
+
+**改坏了怎么知道。** `brain.py check` 查结构，`brain.py eval` 查效果（31 题固定集出 P@k／MRR，
+回退超 0.05 退出码 1），`eval` 的「未调参」那一行才是泛化口径。`rsi.py` 量的是另一件事——
+闭环覆盖率与断点，没埋点的指标就明写"未埋点"。
+
+深挖见 [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md)：七个关键决策、与
+[gbrain](https://github.com/garrytan/gbrain) 的取舍对照、扩展点与已知缺口。
+
 ## 仓库结构
 
+**代码和数据分开放**：skill 在 `skills/`，书库在 `library/`。这样每个 skill 能单独拷走用，
+书库也能整体搬到仓库外（换机器、挂网盘），而不用改任何代码。
+
 ```
-read-a-book/          阅读方法论：检视 / 分析 / 主题阅读
-second-brain/         书库：17 本书的卡片与笔记，按需加载
-book-fetch/           SEEK：取得书
-scandinavian-style/   版式系统：16:9 网格、one-pager、图表规则
-rednote-post/         SHARE：渲染成卡片并发布
-rednote-assistant/    SHARE：排期与节奏
-rsi-reading/          站在上面那层：度量整条环，一次只改一处
-docs/                 README 用图与其生成脚本
+skills/               代码面：八个 skill，各自独立，单个拷出去也能跑
+  read-a-book/        阅读方法论：检视 / 分析 / 主题阅读
+  book-fetch/         SEEK：取得书
+  second-brain/       第二大脑：写法、路由表（25 维）、工具（brain.py）
+  scandinavian-style/ 版式系统：16:9 网格、one-pager、图表规则
+  rednote-post/       SHARE：渲染成卡片并发布
+  rednote-assistant/  SHARE：排期与节奏
+  human-writing/      写作层：去 AI 味 + 贴人设（被 rednote-post 调用）
+  rsi-reading/        站在上面那层：度量整条环，一次只改一处
+library/              数据面：22 本书的卡片与笔记、评测集、索引——真相在这里
+  books/              每本一张卡（只读选中的）
+  notes/              原笔记（深度层）
+  evals/              31 题固定题集 + 基线
+  index.md index.json 生成物，删了能重建
+docs/                 README 用图与其生成脚本；ARCHITECTURE.md 架构说明
+.codex-plugin/        plugin.json：把八个 skill 一次装进 Codex
 ```
+
+`brain.py` 找书库的顺序是 `$SECOND_BRAIN_HOME` → 仓库里的 `library/` → `~/.local/share/second-brain`，
+所以从任何目录跑结果都一样；skill 单独拷出去也能用，只要让 `$SECOND_BRAIN_HOME` 指着书库（见下节）。
 
 ## 安装
 
-把 skill 目录复制到 Codex 的 skills 目录：
+**这个仓库就是一个 Codex plugin。** 清单 `.codex-plugin/plugin.json` 里只声明了一件事——
+`"skills": "./skills/"`（plugin 还能声明 `apps`／`mcpServers`／`hooks`，本仓一个都不需要）。
+把仓库当本地 plugin 装进 Codex，八个 skill 一起就位，名字带 plugin 前缀
+（`reading-pkm:second-brain`、`reading-pkm:book-fetch`…）。
+
+不想用 plugin 就手工复制（装出来的是不带前缀的同名 skill）：
 
 ```bash
 for s in book-fetch read-a-book second-brain scandinavian-style \
-         rednote-post rednote-assistant rsi-reading; do
-  cp -R "$s" "${CODEX_HOME:-$HOME/.codex}/skills/"
+         rednote-post rednote-assistant human-writing rsi-reading; do
+  cp -R "skills/$s" "${CODEX_HOME:-$HOME/.codex}/skills/"
 done
 ```
 
-开发时直接软链，改仓库即生效：
+**装完记得让 `brain.py` 找得到书库。** 它按 `$SECOND_BRAIN_HOME` → 兄弟目录 `library/` →
+`~/.local/share/second-brain` 找。直接从仓库跑、或上面那种软链装法，`library/` 就在 skill 旁边，
+什么都不用设；skill 被拷到别处（plugin 装法会把插件放进 Codex 自己的目录）时它就不在旁边了——
+这时指一下，一个环境变量的事：
+
+```bash
+export SECOND_BRAIN_HOME="$HOME/Documents/GitHub/reading-pkm/library"
+```
+
+书库放错地方时命令不会闷着——`brain.py index`／`check`／`recall` 会把解析出来的路径印出来。
+
+开发时直接软链，改仓库即生效（软链的路径指向 `skills/` 里的目录）——本机眼下就是这一种：
+应用侧看到的名字是 `reading-pkm:*`，指过去仍是仓库里的这份文件。
 
 ```bash
 for s in book-fetch read-a-book second-brain scandinavian-style \
-         rednote-post rednote-assistant rsi-reading; do
-  ln -sfn "$PWD/$s" "${CODEX_HOME:-$HOME/.codex}/skills/$s"
+         rednote-post rednote-assistant human-writing rsi-reading; do
+  ln -sfn "$PWD/skills/$s" "${CODEX_HOME:-$HOME/.codex}/skills/$s"
 done
 ```
 
 两个 skill 需要额外配置，配置都在仓库外——**仓库里不含任何凭据或书源信息**：
 
-- `book-fetch`：书源适配器，见 [`book-fetch/SKILL.md`](./book-fetch/SKILL.md)
-- `rednote-post`：浏览器桥接与扩展，见 [`rednote-post/references/publishing.md`](./rednote-post/references/publishing.md)
+- `book-fetch`：书源适配器，见 [`skills/book-fetch/SKILL.md`](./skills/book-fetch/SKILL.md)
+- `rednote-post`：浏览器桥接与扩展，见 [`skills/rednote-post/references/publishing.md`](./skills/rednote-post/references/publishing.md)
 
 ---
 
