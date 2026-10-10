@@ -50,9 +50,9 @@ naval-almanack
 什么能放大你的产出，且不需要别人点头。
 blue-ocean-strategy · naval-almanack
 
-## 专长与替代（2 本）
+## 专长与替代（3 本）
 这份本事能不能被培训出来——能被培训，就能被取代。
-naval-almanack · yujun-product-methodology
+hackers-and-painters · naval-almanack · yujun-product-methodology
 
 ## 意会与不可言说（2 本）
 有些判断说不清但确实知道，写成条目反而失真。
@@ -62,9 +62,9 @@ reflection-and-history · knowing-and-being
 把平时不当回事的东西硬拽到焦点上，判断会被破坏。
 prisoners-of-our-thoughts · knowing-and-being
 
-## 自治与被计划（5 本）
+## 自治与被计划（6 本）
 谁在定目标——被安排的活和自己的主动性，产出机制不同。
-discourse-on-method · road-to-serfdom · cost-and-choice · smart-mans-training · …另有 1 本，用 --dim 自治与被计划 取
+discourse-on-method · hackers-and-painters · road-to-serfdom · cost-and-choice · …另有 2 本，用 --dim 自治与被计划 取
 
 ## 意义自赋（3 本）
 意义不是被赐予的，是人自己保管的，所以责任更重而不是更轻。
@@ -90,22 +90,22 @@ beginning-of-infinity · the-book-of-elon · cost-and-choice · prisoners-of-our
 分清运气和本事，别把均值回归当成趋势。
 blue-ocean-strategy · thinking-in-models
 
-## 代价与机会成本（9 本）
+## 代价与机会成本（10 本）
 选它放弃了什么——不做的代价要算，留着的代价也要算。
-analysis-and-thinking · the-beauty-of-the-husband · beginning-of-infinity · road-to-serfdom · …另有 5 本，用 --dim 代价与机会成本 取
+analysis-and-thinking · hackers-and-painters · the-beauty-of-the-husband · beginning-of-infinity · …另有 6 本，用 --dim 代价与机会成本 取
 
 ## 身份与角色（7 本）
 这个选择在回答"我是谁"。
 the-beauty-of-the-husband · road-to-serfdom · socratic-apology · historical-regimes · …另有 3 本，用 --dim 身份与角色 取
 
-## 完成与发布（1 本）
+## 完成与发布（2 本）
 什么时候算做完，以及发出去要付的代价。
-the-creative-act
+hackers-and-painters · the-creative-act
 
 ## 边界与不可还原（1 本）
 整体不等于零件之和，拆开就看不见了。
 knowing-and-being
 
-## 传统与共识（11 本）
+## 传统与共识（12 本）
 共识怎么形成，又怎么被合理地推翻。
-discourse-on-method · analysis-and-thinking · the-beauty-of-the-husband · beginning-of-infinity · …另有 7 本，用 --dim 传统与共识 取
+discourse-on-method · analysis-and-thinking · hackers-and-painters · the-beauty-of-the-husband · …另有 8 本，用 --dim 传统与共识 取

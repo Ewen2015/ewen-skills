@@ -1,6 +1,6 @@
 {
  "version": 1,
- "count": 20,
+ "count": 21,
  "dimensions": {
   "尺度": [
    "analysis-and-thinking",
@@ -51,6 +51,7 @@
    "naval-almanack"
   ],
   "专长与替代": [
+   "hackers-and-painters",
    "naval-almanack",
    "yujun-product-methodology"
   ],
@@ -65,6 +66,7 @@
   "自治与被计划": [
    "cost-and-choice",
    "discourse-on-method",
+   "hackers-and-painters",
    "knowing-and-being",
    "road-to-serfdom",
    "smart-mans-training"
@@ -114,6 +116,7 @@
    "analysis-and-thinking",
    "beginning-of-infinity",
    "cost-and-choice",
+   "hackers-and-painters",
    "road-to-serfdom",
    "smart-mans-training",
    "socratic-apology",
@@ -131,6 +134,7 @@
    "the-creative-act"
   ],
   "完成与发布": [
+   "hackers-and-painters",
    "the-creative-act"
   ],
   "边界与不可还原": [
@@ -141,6 +145,7 @@
    "beginning-of-infinity",
    "blue-ocean-strategy",
    "discourse-on-method",
+   "hackers-and-painters",
    "historical-regimes",
    "knowing-and-being",
    "reflection-and-history",
@@ -499,6 +504,85 @@
    "card": "discourse-on-method.md",
    "weight": 1,
    "card_tokens_est": 2631
+  },
+  "hackers-and-painters": {
+   "title": "黑客与画家：硅谷创业之父 Paul Graham 文集",
+   "author": "保罗·格雷厄姆",
+   "editor": [],
+   "lens": "这件事该被**设计**，还是该被**管理**？如果它是创作，现在这套流程是在帮它，还是已经在替它做决定了？",
+   "thesis": "黑客是与画家同类的创作者，不是工程师或科学家——这个参照系一换，就同时解释了优秀软件为什么长不出来、该用什么工具、以及它为什么能创造财富。",
+   "dimensions": [
+    "自治与被计划",
+    "专长与替代",
+    "完成与发布",
+    "传统与共识",
+    "代价与机会成本"
+   ],
+   "triggers": [
+    "要不要创业",
+    "该不该辞职",
+    "创业公司",
+    "大公司待不下去",
+    "流程太重",
+    "管理太多",
+    "绩效考核",
+    "KPI",
+    "委员会",
+    "团队效率低",
+    "程序员不好管",
+    "怎么招程序员",
+    "小团队",
+    "独立开发",
+    "该学什么编程语言",
+    "学Lisp有什么用",
+    "用什么语言",
+    "技术选型",
+    "追赶新技术",
+    "技术债",
+    "重构",
+    "一直不发布",
+    "上线",
+    "产品做不出来",
+    "加班",
+    "996",
+    "睡桌子底下",
+    "技术优势",
+    "护城河",
+    "怎么赚钱",
+    "财富",
+    "收入差距",
+    "贫富分化",
+    "审美",
+    "品味",
+    "设计得不好看",
+    "界面难看",
+    "怎么做设计",
+    "什么时候优化",
+    "过早优化",
+    "代码太长",
+    "程序看不懂",
+    "写文档",
+    "换位思考",
+    "站在用户角度",
+    "开源",
+    "版权",
+    "专利"
+   ],
+   "domains": [
+    "软件工程",
+    "创业",
+    "编程语言",
+    "设计",
+    "财富与分配",
+    "组织管理"
+   ],
+   "source_type": "一手（作者本人的经验与主张）",
+   "source_warning": "第一人称实践证据（Viaweb 三年、用 Lisp 打赢商业竞争、2001 年预判 SaaS）很硬，但**量化证据薄**：第 13 章的「1 行 Lisp = 20 行 C」引自 ITA 总裁的话，是单点经验值，PG 自己也说\"这种比例肯定不会是一个常数\"；第 7 章的收入差距论证，他自己承认是\"开／关\"式的粗检验。另外全书对管理者的描写基本是漫画（第 12、13 章）——引用它的处方之前，先扣掉这一层。",
+   "read_at": "2026-10-10",
+   "notes": "notes/hackers-and-painters.md",
+   "card": "hackers-and-painters.md",
+   "weight": 0,
+   "card_tokens_est": 2864
   },
   "historical-regimes": {
    "title": "历史性的体制：当下主义与时间经验",
