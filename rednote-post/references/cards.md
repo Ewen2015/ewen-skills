@@ -123,6 +123,39 @@
 **不要**用星空、地球、剪影这类"意象图"，或自己合成的书名图顶替书封——
 它们不承担识别功能，读者认不出这是哪本书。
 
+### 中文版封面分辨率不够时，去**中文版 PDF 的首页**取原图
+
+同一条 Z-Library 条目下，**EPUB 和 PDF 的封面分辨率常常差一倍以上**：EPUB 的 `cover.jpg`
+多是从网页或阅读器缩过的（几百像素），而扫描版／FreePic2Pdf 拼出来的 PDF **首页本身就是封面页**，
+里面往往压着一张 1000px 上下的原图。
+
+做法（2026-10-10《黑客与画家》实测）：
+
+```bash
+# 1) 同一本书，中文件源里再下一份 PDF（EPUB 内封面只有 388×600，低于 900px 交付下限）
+python3 <zlib>/scripts/run.py search "书名" --source all --json     # 找 Chinese / pdf 那条
+python3 <zlib>/scripts/run.py download "<result_id>" --output /tmp/x --json
+
+# 2) 取首页那张内嵌图（不要整页截图：页面渲染会带白边和缩放损失）
+python3 -c "
+import fitz, glob
+d = fitz.open(glob.glob('/tmp/x/*.pdf')[0])
+xref = d[0].get_images(full=True)[0][0]        # 首页第一张内嵌图
+pix = fitz.Pixmap(d, xref)
+pix.save('/tmp/cover.png')
+print(pix.width, pix.height)
+"
+
+# 3) 转 RGB PNG、确认真方向，落到 <post-dir>/assets/subject.png
+```
+
+**判据不变**：① 是这本书真实存在的封面（中文版优先）；② 没有水印／促销角标；③ 宽度 ≥ 交付下限
+（1080 画布上封面画到 500px，源图 900px 就够；这次拿到 982×1458）。取到的是**印刷版封面页**，
+通常比电子版更干净，但**要先看一眼**——扫描件可能带图书馆印章、手写编号或歪斜。
+
+**EPUB 内封面够大时不用走这一步**：《苏格拉底的申辩》《无穷的开始》都是直接取
+`OEBPS/Images/cover*`（后者 1122px）。只有它不达标时才去翻 PDF。
+
 ### 处理封面图
 
 **电子封面：不用透视校正。** 只要 ① 转成 RGB PNG（不要 CMYK、不要带 alpha 的怪色）；
